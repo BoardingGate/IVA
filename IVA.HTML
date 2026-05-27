@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -22,7 +22,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Asistente de consolidación Modelo 303 a 390</p>
+                    <p class="text-xs text-blue-200">Asistente de consolidación Modelo 303 a 390 con compensaciones</p>
                 </div>
             </div>
             
@@ -62,15 +62,15 @@
                         <input type="file" accept=".pdf" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" @change="handlePdfUpload($event)">
                         <div class="text-center space-y-2 pointer-events-none">
                             <svg class="w-8 h-8 text-slate-400 group-hover:text-blue-500 mx-auto transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                            <p class="text-xs font-semibold text-slate-600">Arrastra PDFs o haz clic aquí</p>
-                            <p class="text-[10px] text-slate-400">Procesa uno o varios trimestres de forma totalmente local</p>
+                            <p class="text-xs font-semibold text-slate-600">Arrastra PDFs oficiales o haz clic</p>
+                            <p class="text-[10px] text-slate-400">Procesa declaraciones en formato digital nativo</p>
                         </div>
                     </div>
 
                     <!-- Progreso de carga/lectura -->
                     <div x-show="loading" class="mt-4 text-center">
                         <div class="inline-block animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
-                        <p class="text-xs text-slate-500 mt-1">Extrayendo datos...</p>
+                        <p class="text-xs text-slate-500 mt-1" x-text="loadingStatus"></p>
                     </div>
                 </div>
 
@@ -105,6 +105,18 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Visor de texto extraído (Opcional, útil para depuración) -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4" x-show="rawTextPreview">
+                    <button @click="showDebug = !showDebug" class="text-xs font-bold text-slate-500 hover:text-slate-800 flex justify-between w-full">
+                        <span>DETECTOR DE TEXTO PDF</span>
+                        <span x-text="showDebug ? '[-] Ocultar' : '[+] Mostrar'"></span>
+                    </button>
+                    <div x-show="showDebug" class="mt-2">
+                        <p class="text-[10px] text-slate-400 mb-1">Último texto plano leído del archivo:</p>
+                        <textarea class="w-full h-32 text-[9px] font-mono p-1 bg-slate-100 border rounded" readonly x-text="rawTextPreview"></textarea>
+                    </div>
+                </div>
             </div>
 
             <!-- Columna Derecha: Tablas de Trabajo -->
@@ -114,8 +126,8 @@
                 <template x-if="!selectedCompany || !selectedYear">
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center space-y-3">
                         <svg class="w-16 h-16 text-slate-300 mx-auto" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>
-                        <h3 class="text-lg font-bold text-slate-700">Comienza a consolidar datos</h3>
-                        <p class="text-slate-500 text-sm max-w-md mx-auto">Sube uno o varios archivos PDF del Modelo 303. El sistema creará automáticamente la empresa y ordenará los datos fiscales de forma inmediata, o bien crea una empresa manualmente para empezar a teclear.</p>
+                        <h3 class="text-lg font-bold text-slate-700">Consolidador de IVA Activo</h3>
+                        <p class="text-slate-500 text-sm max-w-md mx-auto">Sube declaraciones oficiales en PDF. El sistema identificará de forma autónoma el NIF, Nombre de la empresa, el año y el trimestre, o crea una ficha manual para teclear tus datos.</p>
                     </div>
                 </template>
 
@@ -128,11 +140,11 @@
                             <div>
                                 <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider">Empresa Activa</span>
                                 <h3 class="text-lg font-bold text-slate-800 mt-1" x-text="companies[selectedCompany]?.name || 'Sin Nombre'"></h3>
-                                <p class="text-xs text-slate-500">NIF: <span class="font-mono text-slate-700 font-semibold" x-text="selectedCompany"></span> | Año Fiscal de Consolidación: <span class="font-semibold text-slate-700" x-text="selectedYear"></span></p>
+                                <p class="text-xs text-slate-500">NIF: <span class="font-mono text-slate-700 font-semibold" x-text="selectedCompany"></span> | Ejercicio: <span class="font-semibold text-slate-700" x-text="selectedYear"></span></p>
                             </div>
                             <div class="flex gap-2">
                                 <button @click="deleteActiveYearData()" class="px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 border border-red-200 rounded transition font-medium">
-                                    Borrar este año
+                                    Limpiar ejercicio
                                 </button>
                             </div>
                         </div>
@@ -140,26 +152,24 @@
                         <!-- Selector de Vista (303 por Trimestre vs Resumen 390) -->
                         <div class="flex border-b border-slate-200">
                             <button @click="currentTab = '303'" :class="currentTab === '303' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'" class="py-2.5 px-4 text-sm border-b-2 font-medium transition whitespace-nowrap">
-                                Entrada Trimestral (Mod 303)
+                                Detalle Trimestral (Mod. 303)
                             </button>
                             <button @click="currentTab = '390'" :class="currentTab === '390' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'" class="py-2.5 px-4 text-sm border-b-2 font-medium transition whitespace-nowrap">
-                                Resumen Anual Consolidado (Mod 390)
+                                Consolidación del Resumen Anual (Mod. 390)
                             </button>
                         </div>
 
                         <!-- TAB 1: DATOS TRIMESTRALES 303 -->
                         <div x-show="currentTab === '303'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                                <div>
-                                    <h4 class="font-bold text-slate-700 text-sm">Declaraciones Recibidas (Modelos 303)</h4>
-                                    <p class="text-xs text-slate-500">Los datos que edites aquí se recalculan de forma inmediata en el acumulado.</p>
-                                </div>
+                            <div class="p-4 bg-slate-50 border-b border-slate-200">
+                                <h4 class="font-bold text-slate-700 text-sm">Declaraciones de IVA Trimestrales Registradas</h4>
+                                <p class="text-xs text-slate-500">Puedes editar cualquier importe directamente sobre las celdas. Los cambios se guardan al instante.</p>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
                                     <thead>
                                         <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                                            <th class="p-3 font-semibold min-w-[200px]">Casilla / Concepto Modelo 303</th>
+                                            <th class="p-3 font-semibold min-w-[200px]">Casilla / Concepto</th>
                                             <th class="p-3 text-right font-semibold w-28">1T</th>
                                             <th class="p-3 text-right font-semibold w-28">2T</th>
                                             <th class="p-3 text-right font-semibold w-28">3T</th>
@@ -178,7 +188,7 @@
                                                         <input type="number" step="0.01" 
                                                                :value="getBox303Value(selectedCompany, selectedYear, period, item.box303)"
                                                                @input="updateBox303Value(selectedCompany, selectedYear, period, item.box303, $event.target.value)"
-                                                               class="w-full text-right p-1.5 border border-slate-200 rounded hover:border-slate-300 focus:border-blue-500 outline-none font-mono text-xs focus:bg-white bg-slate-50/50">
+                                                               class="w-full text-right p-1.5 border border-slate-200 rounded hover:border-slate-300 focus:border-blue-500 outline-none font-mono text-xs bg-slate-50/50 focus:bg-white">
                                                     </td>
                                                 </template>
                                             </tr>
@@ -188,11 +198,11 @@
                             </div>
                         </div>
 
-                        <!-- TAB 2: RESUMEN ANUAL 390 (CON DOBLE CAMPO / AJUSTE MANUAL) -->
+                        <!-- TAB 2: RESUMEN ANUAL 390 -->
                         <div x-show="currentTab === '390'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                             <div class="p-4 bg-slate-50 border-b border-slate-200">
                                 <h4 class="font-bold text-slate-700 text-sm">Resumen Acumulado y Preparación del Modelo 390</h4>
-                                <p class="text-xs text-slate-500">Usa la columna de "Ajuste / Valor Libre" para corregir discrepancias o redondeos sin alterar los sumatorios reales.</p>
+                                <p class="text-xs text-slate-500">Compara los valores consolidados calculados con los valores definitivos. Usa la columna "Valor Libre / Ajustado" si necesitas introducir correcciones.</p>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
@@ -200,7 +210,7 @@
                                         <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
                                             <th class="p-3 font-semibold min-w-[220px]">Casilla / Concepto Modelo 390</th>
                                             <th class="p-3 text-right font-semibold w-36">Suma Automática (303)</th>
-                                            <th class="p-3 text-center font-semibold w-12"></th>
+                                            <th class="p-3 text-center font-semibold w-12">Estado</th>
                                             <th class="p-3 text-right font-semibold w-40">Valor Libre / Ajustado</th>
                                             <th class="p-3 text-right font-semibold w-36 bg-blue-50/50 text-blue-900">Resultado Final</th>
                                         </tr>
@@ -211,13 +221,15 @@
                                                 <td class="p-3">
                                                     <span class="font-mono bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded mr-2 font-bold" x-text="'['+item.box390+']'"></span>
                                                     <span class="text-slate-700 font-semibold" x-text="item.label"></span>
-                                                    <div class="text-[10px] text-slate-400 mt-0.5" x-text="'Suma de casillas 303: ' + item.sources.map(b => `[${b}]`).join(' + ')"></div>
+                                                    <div class="text-[10px] text-slate-400 mt-0.5" x-text="'Mapea desde casillas de los 303: ' + item.sources.map(b => `[${b}]`).join(' + ')"></div>
                                                 </td>
-                                                <td class="p-3 text-right font-mono text-slate-500" x-text="formatCurrency(calculateSum390(selectedCompany, selectedYear, item))"></td>
+                                                <td class="p-3 text-right font-mono text-slate-500 font-medium" x-text="formatCurrency(calculateSum390(selectedCompany, selectedYear, item))"></td>
                                                 <td class="p-3 text-center">
-                                                    <!-- Icono indicador de estado de sobrescritura -->
-                                                    <span x-show="hasOverride(selectedCompany, selectedYear, item.box390)" title="Se está usando un valor manual" class="inline-block text-amber-500">
-                                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 4h3a1 1 0 010 2H4a1 1 0 110-2zm10 0h3a1 1 0 110 2h-3a1 1 0 110-2zM2 9a1 1 0 011-1h1a1 1 0 010 2H3a1 1 0 01-1-1zm13 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM2 14a1 1 0 011-1h3a1 1 0 110 2H3a1 1 0 01-1-1zm10 0a1 1 0 011-1h3a1 1 0 110 2h-3a1 1 0 01-1-1zM4 18a1 1 0 011-1h1a1 1 0 010 2H5a1 1 0 01-1-1zm10 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1z"></path></svg>
+                                                    <span x-show="hasOverride(selectedCompany, selectedYear, item.box390)" title="Valor manual forzado" class="inline-block text-amber-600 font-bold bg-amber-100 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide">
+                                                        Ajustado
+                                                    </span>
+                                                    <span x-show="!hasOverride(selectedCompany, selectedYear, item.box390)" class="inline-block text-slate-400 text-[9px] uppercase tracking-wide">
+                                                        Auto
                                                     </span>
                                                 </td>
                                                 <td class="p-2 text-right">
@@ -228,12 +240,12 @@
                                                                class="w-full text-right p-1.5 border border-slate-200 rounded focus:border-amber-500 outline-none font-mono text-xs bg-amber-50/10 hover:bg-amber-50/20 focus:bg-white placeholder:text-slate-300">
                                                         <button x-show="hasOverride(selectedCompany, selectedYear, item.box390)" 
                                                                 @click="updateOverrideValue(selectedCompany, selectedYear, item.box390, '')"
-                                                                class="absolute left-1 text-slate-400 hover:text-red-500 font-bold" title="Eliminar ajuste manual">
+                                                                class="absolute left-1.5 text-slate-400 hover:text-red-500 font-bold text-sm" title="Restaurar valor automático">
                                                             &times;
                                                         </button>
                                                     </div>
                                                 </td>
-                                                <td class="p-3 text-right font-mono font-bold text-slate-800 bg-blue-50/30 border-l border-slate-100" 
+                                                <td class="p-3 text-right font-mono font-bold border-l border-slate-100" 
                                                     :class="hasOverride(selectedCompany, selectedYear, item.box390) ? 'text-amber-700 bg-amber-50/20' : 'text-blue-900 bg-blue-50/40'"
                                                     x-text="formatCurrency(getFinal390Value(selectedCompany, selectedYear, item))">
                                                 </td>
@@ -253,36 +265,38 @@
 
     </main>
 
-    <!-- Script de lógica de la aplicación -->
     <script>
         // Configuración inicial de PDF.js de Mozilla
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
         function app() {
             return {
-                // Estados principales
+                // Estados de control
                 loading: false,
-                companies: {}, // { nif: { nif, name } }
-                records: {},   // { companyNif_year_period: { "01": 100, "03": 4 } }
-                overrides: {}, // { companyNif_year_box390: 120 }
+                loadingStatus: '',
+                showDebug: false,
+                rawTextPreview: '',
                 
-                // Filtros y control de vistas
+                // Base de datos en memoria
+                companies: {}, 
+                records: {},   
+                overrides: {}, 
+                
+                // Filtros de navegación
                 selectedCompany: '',
                 selectedYear: '',
                 availableYears: ['2023', '2024', '2025'],
                 currentTab: '303',
                 
-                // Avisador visual (Toast)
                 toast: {
                     show: false,
                     message: '',
                     type: 'success'
                 },
 
-                // Base de datos local (IndexedDB)
                 db: null,
 
-                // Catálogo de casillas críticas del modelo 303 que necesitamos
+                // Catálogo de casillas críticas del modelo 303 (Incluyendo compensaciones de periodos anteriores)
                 mappedBoxes303: [
                     { box303: '01', label: 'Régimen general - Base imponible al 4%' },
                     { box303: '03', label: 'Régimen general - Cuota al 4%' },
@@ -290,16 +304,17 @@
                     { box303: '06', label: 'Régimen general - Cuota al 10%' },
                     { box303: '07', label: 'Régimen general - Base imponible al 21%' },
                     { box303: '09', label: 'Régimen general - Cuota al 21%' },
-                    { box303: '27', label: 'Total Cuota Devengada' },
-                    { box303: '28', label: 'Op. Interiores Corrientes - Base' },
-                    { box303: '29', label: 'Op. Interiores Corrientes - Cuota' },
-                    { box303: '30', label: 'Op. Interiores Bienes Inversión - Base' },
-                    { box303: '31', label: 'Op. Interiores Bienes Inversión - Cuota' },
+                    { box303: '27', label: 'Total Cuota de IVA Devengado' },
+                    { box303: '28', label: 'Adquisiciones Interiores Corrientes - Base' },
+                    { box303: '29', label: 'Adquisiciones Interiores Corrientes - Cuota' },
+                    { box303: '30', label: 'Adquisiciones Interiores Bienes Inversión - Base' },
+                    { box303: '31', label: 'Adquisiciones Interiores Bienes Inversión - Cuota' },
                     { box303: '45', label: 'Total IVA Deducible' },
+                    { box303: '110', label: 'Cuotas a compensar de períodos anteriores (Ptes. inicio período)' },
                     { box303: '46', label: 'Resultado de la Liquidación' }
                 ],
 
-                // Mapeo estructurado para construir el Modelo 390 partiendo de los Modelo 303 consolidados
+                // Mapeo estructurado para construir el Modelo 390
                 mapping390: [
                     { box390: '01', label: 'Base Imponible al 4%', sources: ['01'] },
                     { box390: '02', label: 'Cuota Devengada al 4%', sources: ['03'] },
@@ -313,10 +328,10 @@
                     { box390: '192', label: 'Op. Interiores Bienes Inversión - Base Deducible', sources: ['30'] },
                     { box390: '193', label: 'Op. Interiores Bienes Inversión - Cuota Deducible', sources: ['31'] },
                     { box390: '232', label: 'Total IVA Deducible Acumulado', sources: ['45'] },
+                    { box390: '84', label: 'Cuotas a compensar de períodos anteriores aplicadas', sources: ['110'] },
                     { box390: '658', label: 'Resultado de Liquidaciones Final', sources: ['46'] }
                 ],
 
-                // Inicializar la App y abrir conexión con IndexedDB
                 async init() {
                     this.initIndexedDB();
                 },
@@ -325,10 +340,9 @@
                     this.toast.message = message;
                     this.toast.type = type;
                     this.toast.show = true;
-                    setTimeout(() => { this.toast.show = false; }, 3500);
+                    setTimeout(() => { this.toast.show = false; }, 4000);
                 },
 
-                // Conexión local permanente a la Base de Datos del Navegador
                 initIndexedDB() {
                     const request = indexedDB.open("iva_acumulador_db", 1);
                     
@@ -349,17 +363,14 @@
                     };
                 },
 
-                // Cargar datos en memoria desde la base de datos IndexedDB
                 loadDataFromDB() {
                     const transaction = this.db.transaction(["companies", "records", "overrides"], "readonly");
                     
-                    // Cargar Empresas
                     transaction.objectStore("companies").getAll().onsuccess = (e) => {
                         const list = e.target.result;
                         list.forEach(c => { this.companies[c.nif] = c; });
                     };
 
-                    // Cargar Registros Trimestrales
                     const recordsStore = transaction.objectStore("records");
                     const recordsReq = recordsStore.openCursor();
                     recordsReq.onsuccess = (e) => {
@@ -370,7 +381,6 @@
                         }
                     };
 
-                    // Cargar Ajustes Manuales
                     const overridesStore = transaction.objectStore("overrides");
                     const overridesReq = overridesStore.openCursor();
                     overridesReq.onsuccess = (e) => {
@@ -382,7 +392,6 @@
                     };
                 },
 
-                // Guardar persistencia de forma aislada
                 saveLocal(storeName, key, value) {
                     if (!this.db) return;
                     const transaction = this.db.transaction([storeName], "readwrite");
@@ -391,14 +400,12 @@
                     if (value === undefined || value === null || value === '') {
                         store.delete(key);
                     } else {
-                        // Si se guarda en companies, el valor debe incluir la clave principal
                         store.put(value, storeName === 'companies' ? undefined : key);
                     }
                 },
 
-                // Crear Empresa Manual
                 addNewCompanyPrompt() {
-                    const name = prompt("Escribe el nombre de la empresa:");
+                    const name = prompt("Escribe el nombre o razón social de la empresa:");
                     if (!name) return;
                     const nif = prompt("Escribe el NIF de la empresa:").trim().toUpperCase();
                     if (!nif) return;
@@ -417,7 +424,7 @@
                     this.showToast("Empresa creada correctamente");
                 },
 
-                // Lógica de lectura y descodificación de PDFs
+                // Lector de PDF adaptado a la distribución de textos de la AEAT
                 async handlePdfUpload(event) {
                     const files = event.target.files;
                     if (!files.length) return;
@@ -428,125 +435,155 @@
                     for (let i = 0; i < files.length; i++) {
                         try {
                             const file = files[i];
+                            this.loadingStatus = `Leyendo ${file.name}...`;
                             const arrayBuffer = await file.arrayBuffer();
+                            
+                            // Cargar documento PDF
                             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                            let fullText = "";
+                            let fullTextList = [];
 
-                            // Unir texto de todas las páginas del documento
                             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                                 const page = await pdf.getPage(pageNum);
                                 const textContent = await page.getTextContent();
-                                const pageText = textContent.items.map(item => item.str).join(" ");
-                                fullText += " " + pageText;
+                                // Mapear cada elemento con su texto plano respetando el orden de lectura interna
+                                textContent.items.forEach(item => {
+                                    if (item.str && item.str.trim() !== '') {
+                                        fullTextList.push(item.str.trim());
+                                    }
+                                });
                             }
 
-                            const parseResult = this.parseTaxPdfText(fullText);
+                            const cleanedTextString = fullTextList.join(" ");
+                            this.rawTextPreview = cleanedTextString; // Enviar al visor de depuración
+
+                            const parseResult = this.parseTaxPdfTextAdvanced(fullTextList, cleanedTextString);
                             if (parseResult) {
                                 this.saveParsedResult(parseResult);
                                 correctCount++;
                             } else {
-                                this.showToast(`No se pudo identificar un Modelo 303 válido en: ${file.name}`, "error");
+                                this.showToast(`No se detectó el formato oficial del Modelo 303 en: ${file.name}`, "error");
                             }
 
                         } catch (err) {
                             console.error(err);
-                            this.showToast("Error procesando uno de los archivos PDF.", "error");
+                            this.showToast("Error crítico al analizar el archivo PDF.", "error");
                         }
                     }
 
                     this.loading = false;
+                    this.loadingStatus = '';
                     if (correctCount > 0) {
-                        this.showToast(`Procesados ${correctCount} documentos correctamente.`);
+                        this.showToast(`Se han consolidado ${correctCount} declaraciones con éxito.`);
                     }
                 },
 
-                // Extractor inteligente heurístico basado en expresiones regulares
-                parseTaxPdfText(text) {
-                    // Validar si realmente es un Modelo 303
-                    if (!text.includes("303") && !text.includes("Liquidación mensual/trimestral")) {
+                // Algoritmo refinado para buscar e identificar casillas y datos de la empresa
+                parseTaxPdfTextAdvanced(tokenList, fullText) {
+                    // Verificación obligatoria de compatibilidad del modelo
+                    if (!fullText.includes("303") && !fullText.includes("Liquidación")) {
                         return null;
                     }
 
-                    // Intentar identificar NIF español (Letra seguida de 8 dígitos o 8 dígitos seguidos de letra)
-                    const nifMatch = text.match(/\b([A-HJ-NP-S-W]\d{7}[A-Z]|\d{8}[A-Z])\b/i);
-                    const nif = nifMatch ? nifMatch[1].toUpperCase() : 'NIF_DESCONOCIDO';
-
-                    // Intentar identificar Razón Social (asociada después de marcas de la AEAT)
-                    let name = "Empresa Autocreada";
-                    const nameRegex = /(?:Apellidos y nombre o Razón social:?|Sujeto pasivo)\s+([^0-9\n]{10,60})/i;
-                    const nameMatch = text.match(nameRegex);
-                    if (nameMatch && nameMatch[1]) {
-                        name = nameMatch[1].trim();
-                    }
-
-                    // Identificar Ejercicio Fiscal (Año)
-                    const yearMatch = text.match(/\b(20\d{2})\b/);
-                    const year = yearMatch ? yearMatch[1] : new Date().getFullYear().toString();
-
-                    // Identificar Periodo Trimestral (1T, 2T, 3T, 4T o sus variantes como 1-T o 01, 02...)
-                    let period = '1T';
-                    const periodMatch = text.match(/\b(1T|2T|3T|4T|1-T|2-T|3-T|4-T)\b/i);
-                    if (periodMatch) {
-                        period = periodMatch[1].toUpperCase().replace('-', '');
+                    // 1. Detección Inteligente del NIF de la Empresa
+                    let nif = '';
+                    const nifRegex = /\b([A-HJ-NP-S-W]\d{7}[A-Z\d]|\d{8}[A-Z])\b/i;
+                    const nifMatch = fullText.match(nifRegex);
+                    
+                    if (nifMatch) {
+                        nif = nifMatch[1].toUpperCase();
                     } else {
-                        // Fallback de meses a trimestres si es una declaración mensual
-                        const monthMatch = text.match(/\b(01|02|03|04|05|06|07|08|09|10|11|12)\b/);
-                        if (monthMatch) {
-                            const m = parseInt(monthMatch[1], 10);
-                            if (m <= 3) period = '1T';
-                            else if (m <= 6) period = '2T';
-                            else if (m <= 9) period = '3T';
-                            else period = '4T';
+                        // Búsqueda por palabras clave alternativas
+                        const indexNif = tokenList.findIndex(t => t.toLowerCase().includes("n.i.f.") || t.toLowerCase() === 'nif');
+                        if (indexNif !== -1 && tokenList[indexNif + 1]) {
+                            nif = tokenList[indexNif + 1].toUpperCase();
+                        }
+                    }
+                    if (!nif) nif = 'NIF_DESCONOCIDO';
+
+                    // 2. Detección Inteligente de la Razón Social / Nombre
+                    let name = 'Empresa Nueva Importada';
+                    const nifIndex = tokenList.indexOf(nif);
+                    if (nifIndex !== -1 && tokenList[nifIndex + 1]) {
+                        // La AEAT habitualmente coloca el Nombre inmediatamente junto al NIF en el flujo de datos
+                        let potentialName = tokenList[nifIndex + 1];
+                        if (potentialName.length > 5 && !potentialName.includes("303") && !potentialName.includes("Página")) {
+                            name = potentialName.replace(/[:]/g, '').trim();
+                        }
+                    } else {
+                        // Método secundario por patrón
+                        const nameMatch = fullText.match(/(?:Razón social|Apellidos y nombre)\s*[:]?\s*([^0-9]{8,60})/i);
+                        if (nameMatch && nameMatch[1]) {
+                            name = nameMatch[1].trim();
                         }
                     }
 
-                    // Mapeo dinámico de casillas
-                    const values = {};
-                    this.mappedBoxes303.forEach(item => {
-                        // Buscamos un formato común en PDF: "[Nº Casilla]" o "Casilla Nº" seguido del número decimal
-                        // O patrones como "03" seguido de espacio y el valor monetario
-                        const patterns = [
-                            new RegExp(`\\[${item.box303}\\]\\s*(-?\\d+[.,]\\d{2})`, 'i'),
-                            new RegExp(`\\b${item.box303}\\s+([\\d.,]+)`, 'i'),
-                            new RegExp(`\\b${item.box303}\\b[^\\d]*?([\\d.,]+)`, 'i')
-                        ];
+                    // Limpieza de rastros de cabecera en el nombre
+                    name = name.replace(/Sujeto pasivo|Declarante|Espacio reservado para la etiqueta/gi, '').trim();
 
-                        let matchedValue = 0;
-                        for (let regex of patterns) {
-                            const match = text.match(regex);
-                            if (match && match[1]) {
-                                // Limpieza del formato numérico español (1.000,50 -> 1000.50)
-                                let cleaned = match[1].replace(/\./g, '').replace(',', '.');
-                                matchedValue = parseFloat(cleaned) || 0;
-                                break;
+                    // 3. Detección de Año Fiscal
+                    let year = new Date().getFullYear().toString();
+                    const yearMatch = fullText.match(/\b(202\d)\b/);
+                    if (yearMatch) {
+                        year = yearMatch[1];
+                    }
+
+                    // 4. Detección del Periodo (Trimestral o Mensual convertido)
+                    let period = '1T';
+                    const periodMatch = fullText.match(/\b(1T|2T|3T|4T|1-T|2-T|3-T|4-T|01|02|03|04|05|06|07|08|09|10|11|12)\b/i);
+                    if (periodMatch) {
+                        let matchedPeriod = periodMatch[1].toUpperCase().replace('-', '');
+                        if (['01', '02', '03', '1T'].includes(matchedPeriod)) period = '1T';
+                        else if (['04', '05', '06', '2T'].includes(matchedPeriod)) period = '2T';
+                        else if (['07', '08', '09', '3T'].includes(matchedPeriod)) period = '3T';
+                        else if (['10', '11', '12', '4T'].includes(matchedPeriod)) period = '4T';
+                    }
+
+                    // 5. Extracción por proximidad de casillas monetarias
+                    const values = {};
+                    this.mappedBoxes303.forEach(target => {
+                        let extractedVal = 0;
+                        
+                        // Recorremos la lista de palabras del PDF buscando el identificador de casilla
+                        for (let i = 0; i < tokenList.length; i++) {
+                            const token = tokenList[i].replace(/[\[\]]/g, ''); // Limpiar [01] -> 01
+                            
+                            if (token === target.box303) {
+                                // Buscamos en los siguientes 5 elementos el primer número con formato decimal válido
+                                for (let offset = 1; offset <= 5; offset++) {
+                                    if (tokenList[i + offset]) {
+                                        const candidate = tokenList[i + offset].trim();
+                                        // Filtro de formato decimal español (ej: 12.300,50 o -1.000,00 o 0,00)
+                                        if (/^-?[\d.]+(?:,\d{2})?$/.test(candidate)) {
+                                            let cleaned = candidate.replace(/\./g, '').replace(',', '.');
+                                            extractedVal = parseFloat(cleaned) || 0;
+                                            break;
+                                        }
+                                    }
+                                }
                             }
+                            if (extractedVal !== 0) break; // Detener búsqueda si ya tiene valor
                         }
-                        values[item.box303] = matchedValue;
+                        values[target.box303] = extractedVal;
                     });
 
                     return { nif, name, year, period, values };
                 },
 
-                // Salvar resultados detectados por el sistema
                 saveParsedResult(data) {
-                    // Si la empresa no existe, la añadimos sobre la marcha
                     if (!this.companies[data.nif]) {
                         const newC = { nif: data.nif, name: data.name };
                         this.companies[data.nif] = newC;
                         this.saveLocal("companies", data.nif, newC);
                     }
 
-                    // Almacenar el registro del trimestre
                     const recordKey = `${data.nif}_${data.year}_${data.period}`;
                     this.records[recordKey] = data.values;
                     this.saveLocal("records", recordKey, data.values);
 
-                    // Auto-seleccionar para que el usuario visualice el cambio
                     this.selectedCompany = data.nif;
                     this.selectedYear = data.year;
                 },
 
-                // Lectores de valores trimestrales de las casillas del 303
                 getBox303Value(nif, year, period, box) {
                     const key = `${nif}_${year}_${period}`;
                     if (this.records[key] && this.records[key][box] !== undefined) {
@@ -555,7 +592,6 @@
                     return 0;
                 },
 
-                // Permitir edición directa por teclado de las casillas importadas
                 updateBox303Value(nif, year, period, box, val) {
                     const key = `${nif}_${year}_${period}`;
                     if (!this.records[key]) {
@@ -565,7 +601,6 @@
                     this.saveLocal("records", key, this.records[key]);
                 },
 
-                // Lógica de cálculo acumulador del Modelo 390
                 calculateSum390(nif, year, item) {
                     let total = 0;
                     const periods = ['1T', '2T', '3T', '4T'];
@@ -584,7 +619,6 @@
                     return Math.round(total * 100) / 100;
                 },
 
-                // Lectores y actualizadores de la sobrescritura manual
                 getOverrideValue(nif, year, box390) {
                     const key = `${nif}_${year}_${box390}`;
                     return this.overrides[key] !== undefined ? this.overrides[key] : '';
@@ -607,7 +641,6 @@
                     }
                 },
 
-                // Devuelve el dato final aplicando la prioridad: Valor Libre > Suma Automática
                 getFinal390Value(nif, year, item) {
                     if (this.hasOverride(nif, year, item.box390)) {
                         return this.overrides[`${nif}_${year}_${item.box390}`];
@@ -615,12 +648,10 @@
                     return this.calculateSum390(nif, year, item);
                 },
 
-                // Formateador estándar de divisa
                 formatCurrency(value) {
                     return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value || 0);
                 },
 
-                // Borrar datos del año actual
                 deleteActiveYearData() {
                     if (confirm(`¿Seguro que deseas vaciar todos los registros del año fiscal ${this.selectedYear}?`)) {
                         const periods = ['1T', '2T', '3T', '4T'];
@@ -640,7 +671,6 @@
                     }
                 },
 
-                // Exportación al disco duro local (Resguardo total en formato JSON)
                 exportData() {
                     const dataPayload = {
                         companies: this.companies,
@@ -652,13 +682,12 @@
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.href = url;
-                    link.download = `Copia_Seguridad_IVA_${new Date().toISOString().slice(0,10)}.json`;
+                    link.download = `Backup_IVA_${this.selectedCompany || 'General'}_${new Date().toISOString().slice(0,10)}.json`;
                     link.click();
                     URL.revokeObjectURL(url);
                     this.showToast("Copia de seguridad descargada correctamente.");
                 },
 
-                // Importar copia de seguridad desde el disco duro
                 importData(event) {
                     const file = event.target.files[0];
                     if (!file) return;
@@ -669,25 +698,23 @@
                             const parsed = JSON.parse(e.target.result);
                             
                             if (parsed.companies && parsed.records && parsed.overrides) {
-                                // Fusionar datos importados
                                 Object.assign(this.companies, parsed.companies);
                                 Object.assign(this.records, parsed.records);
                                 Object.assign(this.overrides, parsed.overrides);
 
-                                // Escribir de golpe en IndexedDB
                                 const transaction = this.db.transaction(["companies", "records", "overrides"], "readwrite");
                                 
                                 Object.keys(parsed.companies).forEach(k => transaction.objectStore("companies").put(parsed.companies[k]));
                                 Object.keys(parsed.records).forEach(k => transaction.objectStore("records").put(parsed.records[k], k));
                                 Object.keys(parsed.overrides).forEach(k => transaction.objectStore("overrides").put(parsed.overrides[k], k));
 
-                                this.showToast("Copia de seguridad restaurada correctamente.");
+                                this.showToast("Base de datos de copia de seguridad restaurada.");
                                 if (Object.keys(this.companies).length > 0) {
                                     this.selectedCompany = Object.keys(this.companies)[0];
                                     this.selectedYear = new Date().getFullYear().toString();
                                 }
                             } else {
-                                this.showToast("El archivo JSON no contiene el formato esperado.", "error");
+                                this.showToast("El archivo JSON no contiene la estructura del acumulador.", "error");
                             }
                         } catch (err) {
                             this.showToast("No se pudo leer el archivo de copia de seguridad.", "error");
