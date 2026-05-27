@@ -11,7 +11,7 @@
     <!-- PDF.js de Mozilla para la lectura de documentos localmente -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen font-sans" x-data="app()">
+<body class="bg-slate-100 text-slate-800 min-h-screen font-sans" x-data="app()">
 
     <!-- Cabecera -->
     <header class="bg-blue-900 text-white shadow-md border-b border-blue-800">
@@ -22,19 +22,18 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Asistente de consolidación Modelo 303 a 390 con compensaciones</p>
+                    <p class="text-xs text-blue-200">Consolidación con diseño idéntico al Modelo Oficial 303</p>
                 </div>
             </div>
             
-            <!-- Acciones de backup -->
             <div class="flex flex-wrap gap-2">
                 <button @click="exportData()" class="px-3 py-1.5 bg-blue-800 hover:bg-blue-700 rounded text-xs font-medium flex items-center gap-1.5 transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Exportar Backup (Disco Duro)
+                    Exportar Copia de Seguridad
                 </button>
                 <label class="px-3 py-1.5 bg-blue-800 hover:bg-blue-700 rounded text-xs font-medium flex items-center gap-1.5 cursor-pointer transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    Importar Backup
+                    Importar Copia
                     <input type="file" accept=".json" class="hidden" @change="importData($event)">
                 </label>
             </div>
@@ -43,7 +42,7 @@
 
     <main class="container mx-auto px-4 py-6 max-w-7xl">
         
-        <!-- Notificaciones de estado -->
+        <!-- Alertas de estado -->
         <div x-show="toast.show" x-transition class="fixed bottom-5 right-5 z-50 p-4 rounded-lg shadow-xl text-white flex items-center gap-2" :class="toast.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'">
             <span x-text="toast.message"></span>
             <button @click="toast.show = false" class="font-bold ml-2">&times;</button>
@@ -51,32 +50,28 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
-            <!-- Columna Izquierda: Panel de Control y Carga -->
+            <!-- Columna Izquierda: Panel de Control -->
             <div class="lg:col-span-1 space-y-6">
                 
-                <!-- Sección de Carga de PDF -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                    <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3">1. Subir Modelo 303 (PDF)</h2>
-                    
+                    <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">1. Subir Modelo 303 (PDF)</h2>
                     <div class="border-2 border-dashed border-slate-300 rounded-lg p-6 hover:border-blue-500 transition cursor-pointer relative bg-slate-50 group">
                         <input type="file" accept=".pdf" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" @change="handlePdfUpload($event)">
                         <div class="text-center space-y-2 pointer-events-none">
                             <svg class="w-8 h-8 text-slate-400 group-hover:text-blue-500 mx-auto transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                            <p class="text-xs font-semibold text-slate-600">Arrastra PDFs oficiales o haz clic</p>
-                            <p class="text-[10px] text-slate-400">Procesa declaraciones en formato digital nativo</p>
+                            <p class="text-xs font-semibold text-slate-600">Suelte aquí sus PDFs</p>
+                            <p class="text-[10px] text-slate-400">Extrae NIF, Empresa, Año e Importes</p>
                         </div>
                     </div>
 
-                    <!-- Progreso de carga/lectura -->
                     <div x-show="loading" class="mt-4 text-center">
                         <div class="inline-block animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
                         <p class="text-xs text-slate-500 mt-1" x-text="loadingStatus"></p>
                     </div>
                 </div>
 
-                <!-- Selección de Entidad -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
-                    <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">2. Selección de Empresa</h2>
+                    <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">2. Filtro de Trabajo</h2>
                     
                     <div>
                         <label class="block text-xs font-medium text-slate-500 mb-1">Empresa / NIF</label>
@@ -100,109 +95,317 @@
                         </div>
                         <div class="flex items-end">
                             <button @click="addNewCompanyPrompt()" class="w-full text-center px-2 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold transition">
-                                + Crear Empresa
+                                + Crear Manual
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Visor de texto extraído (Opcional, útil para depuración) -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4" x-show="rawTextPreview">
                     <button @click="showDebug = !showDebug" class="text-xs font-bold text-slate-500 hover:text-slate-800 flex justify-between w-full">
-                        <span>DETECTOR DE TEXTO PDF</span>
-                        <span x-text="showDebug ? '[-] Ocultar' : '[+] Mostrar'"></span>
+                        <span>Lector de texto plano</span>
+                        <span x-text="showDebug ? '[-] Ocultar' : '[+] Depurar'"></span>
                     </button>
                     <div x-show="showDebug" class="mt-2">
-                        <p class="text-[10px] text-slate-400 mb-1">Último texto plano leído del archivo:</p>
-                        <textarea class="w-full h-32 text-[9px] font-mono p-1 bg-slate-100 border rounded" readonly x-text="rawTextPreview"></textarea>
+                        <textarea class="w-full h-40 text-[9px] font-mono p-2 bg-slate-100 border rounded" readonly x-text="rawTextPreview"></textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- Columna Derecha: Tablas de Trabajo -->
+            <!-- Columna Derecha: Panel Principal -->
             <div class="lg:col-span-3 space-y-6">
                 
-                <!-- Si no hay selección, mostramos pantalla vacía explicativa -->
                 <template x-if="!selectedCompany || !selectedYear">
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center space-y-3">
                         <svg class="w-16 h-16 text-slate-300 mx-auto" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>
-                        <h3 class="text-lg font-bold text-slate-700">Consolidador de IVA Activo</h3>
-                        <p class="text-slate-500 text-sm max-w-md mx-auto">Sube declaraciones oficiales en PDF. El sistema identificará de forma autónoma el NIF, Nombre de la empresa, el año y el trimestre, o crea una ficha manual para teclear tus datos.</p>
+                        <h3 class="text-lg font-bold text-slate-700">Por favor, selecciona o importa una declaración</h3>
+                        <p class="text-slate-500 text-sm max-w-md mx-auto">Arrastra tus archivos de autoliquidación del IVA para comenzar el cuadre de importes de forma automatizada.</p>
                     </div>
                 </template>
 
-                <!-- Área de trabajo activa -->
                 <template x-if="selectedCompany && selectedYear">
                     <div class="space-y-6">
                         
-                        <!-- Datos Identificativos de la Empresa activa -->
+                        <!-- Información activa -->
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <div>
-                                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider">Empresa Activa</span>
-                                <h3 class="text-lg font-bold text-slate-800 mt-1" x-text="companies[selectedCompany]?.name || 'Sin Nombre'"></h3>
+                                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider">Declaración Activa</span>
+                                <h3 class="text-lg font-bold text-slate-800 mt-1" x-text="companies[selectedCompany]?.name"></h3>
                                 <p class="text-xs text-slate-500">NIF: <span class="font-mono text-slate-700 font-semibold" x-text="selectedCompany"></span> | Ejercicio: <span class="font-semibold text-slate-700" x-text="selectedYear"></span></p>
                             </div>
-                            <div class="flex gap-2">
-                                <button @click="deleteActiveYearData()" class="px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 border border-red-200 rounded transition font-medium">
-                                    Limpiar ejercicio
-                                </button>
-                            </div>
+                            <button @click="deleteActiveYearData()" class="px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 border border-red-200 rounded transition font-medium">
+                                Eliminar ejercicio
+                            </button>
                         </div>
 
-                        <!-- Selector de Vista (303 por Trimestre vs Resumen 390) -->
+                        <!-- Pestañas -->
                         <div class="flex border-b border-slate-200">
-                            <button @click="currentTab = '303'" :class="currentTab === '303' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'" class="py-2.5 px-4 text-sm border-b-2 font-medium transition whitespace-nowrap">
-                                Detalle Trimestral (Mod. 303)
+                            <button @click="currentTab = '303'" :class="currentTab === '303' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'" class="py-2.5 px-4 text-sm border-b-2 font-medium transition">
+                                Entrada de Datos (Modelo 303 Oficial)
                             </button>
-                            <button @click="currentTab = '390'" :class="currentTab === '390' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'" class="py-2.5 px-4 text-sm border-b-2 font-medium transition whitespace-nowrap">
-                                Consolidación del Resumen Anual (Mod. 390)
+                            <button @click="currentTab = '390'" :class="currentTab === '390' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'" class="py-2.5 px-4 text-sm border-b-2 font-medium transition">
+                                Acumulados para Modelo 390
                             </button>
                         </div>
 
-                        <!-- TAB 1: DATOS TRIMESTRALES 303 -->
-                        <div x-show="currentTab === '303'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div class="p-4 bg-slate-50 border-b border-slate-200">
-                                <h4 class="font-bold text-slate-700 text-sm">Declaraciones de IVA Trimestrales Registradas</h4>
-                                <p class="text-xs text-slate-500">Puedes editar cualquier importe directamente sobre las celdas. Los cambios se guardan al instante.</p>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                                            <th class="p-3 font-semibold min-w-[200px]">Casilla / Concepto</th>
-                                            <th class="p-3 text-right font-semibold w-28">1T</th>
-                                            <th class="p-3 text-right font-semibold w-28">2T</th>
-                                            <th class="p-3 text-right font-semibold w-28">3T</th>
-                                            <th class="p-3 text-right font-semibold w-28">4T</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100 text-xs">
-                                        <template x-for="item in mappedBoxes303" :key="item.box303">
-                                            <tr class="hover:bg-slate-50 transition">
-                                                <td class="p-3">
-                                                    <span class="font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded mr-2 font-bold" x-text="'['+item.box303+']'"></span>
-                                                    <span class="text-slate-600 font-medium" x-text="item.label"></span>
-                                                </td>
-                                                <template x-for="period in ['1T', '2T', '3T', '4T']" :key="period">
-                                                    <td class="p-2 text-right">
-                                                        <input type="number" step="0.01" 
-                                                               :value="getBox303Value(selectedCompany, selectedYear, period, item.box303)"
-                                                               @input="updateBox303Value(selectedCompany, selectedYear, period, item.box303, $event.target.value)"
-                                                               class="w-full text-right p-1.5 border border-slate-200 rounded hover:border-slate-300 focus:border-blue-500 outline-none font-mono text-xs bg-slate-50/50 focus:bg-white">
-                                                    </td>
+                        <!-- TABLA MAQUETADA COMO MODELO 303 OFICIAL -->
+                        <div x-show="currentTab === '303'" class="space-y-6">
+                            
+                            <!-- BLOQUE A: IVA DEVENGADO -->
+                            <div class="bg-white rounded-xl shadow-sm border border-blue-200 overflow-hidden">
+                                <div class="p-3.5 bg-blue-800 text-white flex justify-between items-center">
+                                    <h4 class="font-bold text-xs uppercase tracking-wider">I. IVA DEVENGADO (Régimen General)</h4>
+                                    <span class="text-[10px] bg-blue-700 text-blue-100 px-2 py-0.5 rounded font-mono">MODELO 303</span>
+                                </div>
+                                <div class="p-4 space-y-4">
+                                    <!-- Grid de Régimen General -->
+                                    <div class="grid grid-cols-12 gap-2 text-center font-semibold text-xs text-slate-500 pb-2 border-b border-slate-100">
+                                        <div class="col-span-4 text-left">Concepto de Liquidación</div>
+                                        <div class="col-span-2">Base Imponible</div>
+                                        <div class="col-span-1">Tipo %</div>
+                                        <div class="col-span-5">Cuota Resultante por Trimestre (1T / 2T / 3T / 4T)</div>
+                                    </div>
+
+                                    <!-- Fila 4% -->
+                                    <div class="grid grid-cols-12 gap-2 items-center text-xs">
+                                        <div class="col-span-4 font-medium">Recargo y Régimen General al 4%</div>
+                                        <!-- Base Imponible (Para simplificar, mostramos inputs por trimestre) -->
+                                        <div class="col-span-2 space-y-1">
+                                            <template x-for="p in ['1T','2T','3T','4T']">
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-[9px] text-slate-400 font-mono w-4" x-text="p"></span>
+                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '01')" @input="updateBox303Value(selectedCompany, selectedYear, p, '01', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded text-[11px] font-mono">
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div class="col-span-1 text-center font-bold text-slate-400">4%</div>
+                                        <!-- Cuotas -->
+                                        <div class="col-span-5 grid grid-cols-4 gap-1">
+                                            <template x-for="p in ['1T','2T','3T','4T']">
+                                                <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '03')" @input="updateBox303Value(selectedCompany, selectedYear, p, '03', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono bg-blue-50/20 hover:bg-white transition focus:bg-white text-[11px]" placeholder="0,00">
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Fila 10% -->
+                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-100">
+                                        <div class="col-span-4 font-medium">Recargo y Régimen General al 10%</div>
+                                        <div class="col-span-2 space-y-1">
+                                            <template x-for="p in ['1T','2T','3T','4T']">
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-[9px] text-slate-400 font-mono w-4" x-text="p"></span>
+                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '04')" @input="updateBox303Value(selectedCompany, selectedYear, p, '04', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded text-[11px] font-mono">
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div class="col-span-1 text-center font-bold text-slate-400">10%</div>
+                                        <div class="col-span-5 grid grid-cols-4 gap-1">
+                                            <template x-for="p in ['1T','2T','3T','4T']">
+                                                <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '06')" @input="updateBox303Value(selectedCompany, selectedYear, p, '06', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono bg-blue-50/20 hover:bg-white transition text-[11px]" placeholder="0,00">
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Fila 21% -->
+                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-100">
+                                        <div class="col-span-4 font-medium">Régimen General al 21%</div>
+                                        <div class="col-span-2 space-y-1">
+                                            <template x-for="p in ['1T','2T','3T','4T']">
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-[9px] text-slate-400 font-mono w-4" x-text="p"></span>
+                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '07')" @input="updateBox303Value(selectedCompany, selectedYear, p, '07', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded text-[11px] font-mono">
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div class="col-span-1 text-center font-bold text-slate-400">21%</div>
+                                        <div class="col-span-5 grid grid-cols-4 gap-1">
+                                            <template x-for="p in ['1T','2T','3T','4T']">
+                                                <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '09')" @input="updateBox303Value(selectedCompany, selectedYear, p, '09', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono bg-blue-50/20 hover:bg-white transition text-[11px]" placeholder="0,00">
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Adquisiciones Intracomunitarias -->
+                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-100 bg-slate-50/50 p-2 rounded">
+                                        <div class="col-span-4 font-bold text-slate-700">Adquisiciones Intracomunitarias <span class="text-blue-600 font-mono">[10/11]</span></div>
+                                        <div class="col-span-4 space-y-1">
+                                            <span class="text-[10px] text-slate-500 block font-semibold">Bases [10]:</span>
+                                            <div class="grid grid-cols-4 gap-1">
+                                                <template x-for="p in ['1T','2T','3T','4T']">
+                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '10')" @input="updateBox303Value(selectedCompany, selectedYear, p, '10', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Base">
                                                 </template>
-                                            </tr>
-                                        </template>
-                                    </tbody>
-                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="col-span-4 space-y-1">
+                                            <span class="text-[10px] text-slate-500 block font-semibold">Cuotas [11]:</span>
+                                            <div class="grid grid-cols-4 gap-1">
+                                                <template x-for="p in ['1T','2T','3T','4T']">
+                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '11')" @input="updateBox303Value(selectedCompany, selectedYear, p, '11', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Cuota">
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Inversión Sujeto Pasivo -->
+                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-2 bg-slate-50/50 p-2 rounded">
+                                        <div class="col-span-4 font-bold text-slate-700">Inversión del Sujeto Pasivo <span class="text-blue-600 font-mono">[12/13]</span></div>
+                                        <div class="col-span-4 space-y-1">
+                                            <span class="text-[10px] text-slate-500 block font-semibold">Bases [12]:</span>
+                                            <div class="grid grid-cols-4 gap-1">
+                                                <template x-for="p in ['1T','2T','3T','4T']">
+                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '12')" @input="updateBox303Value(selectedCompany, selectedYear, p, '12', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Base">
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <div class="col-span-4 space-y-1">
+                                            <span class="text-[10px] text-slate-500 block font-semibold">Cuotas [13]:</span>
+                                            <div class="grid grid-cols-4 gap-1">
+                                                <template x-for="p in ['1T','2T','3T','4T']">
+                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '13')" @input="updateBox303Value(selectedCompany, selectedYear, p, '13', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Cuota">
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Total Devengado Casilla 27 -->
+                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-200 bg-slate-100 p-2 rounded">
+                                        <div class="col-span-7 font-bold text-slate-700 uppercase">Total Cuota IVA Devengado [27]</div>
+                                        <div class="col-span-5 grid grid-cols-4 gap-1">
+                                            <template x-for="p in ['1T','2T','3T','4T']">
+                                                <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '27')" @input="updateBox303Value(selectedCompany, selectedYear, p, '27', $event.target.value)" class="w-full text-right p-1.5 border border-slate-300 rounded font-mono bg-white font-bold text-blue-900 text-[11px]">
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                </div>
                             </div>
+
+                            <!-- BLOQUE B: IVA DEDUCIBLE -->
+                            <div class="bg-white rounded-xl shadow-sm border border-emerald-200 overflow-hidden">
+                                <div class="p-3.5 bg-emerald-800 text-white flex justify-between items-center">
+                                    <h4 class="font-bold text-xs uppercase tracking-wider">II. IVA DEDUCIBLE (Adquisiciones interiores)</h4>
+                                    <span class="text-[10px] bg-emerald-700 text-emerald-100 px-2 py-0.5 rounded font-mono">MODELO 303</span>
+                                </div>
+                                <div class="p-4 space-y-4">
+                                    
+                                    <!-- Op. Corrientes -->
+                                    <div class="grid grid-cols-12 gap-2 items-center text-xs">
+                                        <div class="col-span-4 font-bold text-slate-700">Op. Corrientes Interiores <span class="text-emerald-700 font-mono">[28/29]</span></div>
+                                        <div class="col-span-4 space-y-1">
+                                            <span class="text-[10px] text-slate-500 block">Bases [28]:</span>
+                                            <div class="grid grid-cols-4 gap-1">
+                                                <template x-for="p in ['1T','2T','3T','4T']">
+                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '28')" @input="updateBox303Value(selectedCompany, selectedYear, p, '28', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Base">
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <div class="col-span-4 space-y-1">
+                                            <span class="text-[10px] text-slate-500 block">Cuotas [29]:</span>
+                                            <div class="grid grid-cols-4 gap-1">
+                                                <template x-for="p in ['1T','2T','3T','4T']">
+                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '29')" @input="updateBox303Value(selectedCompany, selectedYear, p, '29', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-[11px]" placeholder="Cuota">
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bienes de Inversión -->
+                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-100">
+                                        <div class="col-span-4 font-bold text-slate-700">Op. Bienes de Inversión Interiores <span class="text-emerald-700 font-mono">[30/31]</span></div>
+                                        <div class="col-span-4 space-y-1">
+                                            <span class="text-[10px] text-slate-500 block">Bases [30]:</span>
+                                            <div class="grid grid-cols-4 gap-1">
+                                                <template x-for="p in ['1T','2T','3T','4T']">
+                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '30')" @input="updateBox303Value(selectedCompany, selectedYear, p, '30', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Base">
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <div class="col-span-4 space-y-1">
+                                            <span class="text-[10px] text-slate-500 block">Cuotas [31]:</span>
+                                            <div class="grid grid-cols-4 gap-1">
+                                                <template x-for="p in ['1T','2T','3T','4T']">
+                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '31')" @input="updateBox303Value(selectedCompany, selectedYear, p, '31', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-[11px]" placeholder="Cuota">
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Total Deducible Casilla 45 -->
+                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-200 bg-emerald-50 p-2 rounded">
+                                        <div class="col-span-7 font-bold text-slate-700 uppercase">Total IVA Deducible [45]</div>
+                                        <div class="col-span-5 grid grid-cols-4 gap-1">
+                                            <template x-for="p in ['1T','2T','3T','4T']">
+                                                <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '45')" @input="updateBox303Value(selectedCompany, selectedYear, p, '45', $event.target.value)" class="w-full text-right p-1.5 border border-emerald-300 rounded font-mono bg-white font-bold text-emerald-900 text-[11px]">
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- BLOQUES COMPLEMENTARIOS: INFORMACIÓN ADICIONAL & RESULTADO -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                
+                                <div class="bg-white rounded-xl shadow-sm border border-purple-200 overflow-hidden">
+                                    <div class="p-3 bg-purple-800 text-white font-bold text-xs uppercase tracking-wider">
+                                        III. INFORMACIÓN ADICIONAL
+                                    </div>
+                                    <div class="p-4 space-y-3">
+                                        <div class="text-xs">
+                                            <label class="block font-bold text-slate-700 mb-1">Entregas Intracomunitarias (Exentas) [59]</label>
+                                            <div class="grid grid-cols-4 gap-1">
+                                                <template x-for="p in ['1T','2T','3T','4T']">
+                                                    <div>
+                                                        <span class="text-[9px] text-slate-400 font-mono text-center block" x-text="p"></span>
+                                                        <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '59')" @input="updateBox303Value(selectedCompany, selectedYear, p, '59', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="0,00">
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-300 overflow-hidden">
+                                    <div class="p-3 bg-slate-700 text-white font-bold text-xs uppercase tracking-wider">
+                                        IV. CÁLCULO DE RESULTADO
+                                    </div>
+                                    <div class="p-4 space-y-4">
+                                        <!-- Compensaciones -->
+                                        <div class="text-xs">
+                                            <label class="block font-bold text-slate-700 mb-1">Cuotas a compensar pendientes [110]</label>
+                                            <div class="grid grid-cols-4 gap-1">
+                                                <template x-for="p in ['1T','2T','3T','4T']">
+                                                    <div>
+                                                        <span class="text-[9px] text-slate-400 font-mono text-center block" x-text="p"></span>
+                                                        <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '110')" @input="updateBox303Value(selectedCompany, selectedYear, p, '110', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="0,00">
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <!-- Resultado -->
+                                        <div class="text-xs border-t border-slate-100 pt-2">
+                                            <label class="block font-bold text-slate-700 mb-1">Resultado de la liquidación [46]</label>
+                                            <div class="grid grid-cols-4 gap-1">
+                                                <template x-for="p in ['1T','2T','3T','4T']">
+                                                    <div>
+                                                        <span class="text-[9px] text-slate-400 font-mono text-center block" x-text="p"></span>
+                                                        <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '46')" @input="updateBox303Value(selectedCompany, selectedYear, p, '46', $event.target.value)" class="w-full text-right p-1.5 border border-slate-300 rounded font-mono font-bold text-slate-800 text-[11px]">
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
                         </div>
 
                         <!-- TAB 2: RESUMEN ANUAL 390 -->
                         <div x-show="currentTab === '390'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                             <div class="p-4 bg-slate-50 border-b border-slate-200">
                                 <h4 class="font-bold text-slate-700 text-sm">Resumen Acumulado y Preparación del Modelo 390</h4>
-                                <p class="text-xs text-slate-500">Compara los valores consolidados calculados con los valores definitivos. Usa la columna "Valor Libre / Ajustado" si necesitas introducir correcciones.</p>
+                                <p class="text-xs text-slate-500">Cruce de correspondencias directo para la presentación anual de IVA.</p>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
@@ -221,12 +424,12 @@
                                                 <td class="p-3">
                                                     <span class="font-mono bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded mr-2 font-bold" x-text="'['+item.box390+']'"></span>
                                                     <span class="text-slate-700 font-semibold" x-text="item.label"></span>
-                                                    <div class="text-[10px] text-slate-400 mt-0.5" x-text="'Mapea desde casillas de los 303: ' + item.sources.map(b => `[${b}]`).join(' + ')"></div>
+                                                    <div class="text-[10px] text-slate-400 mt-0.5" x-text="'Se acumula desde casillas 303: ' + item.sources.map(b => `[${b}]`).join(' + ')"></div>
                                                 </td>
                                                 <td class="p-3 text-right font-mono text-slate-500 font-medium" x-text="formatCurrency(calculateSum390(selectedCompany, selectedYear, item))"></td>
                                                 <td class="p-3 text-center">
-                                                    <span x-show="hasOverride(selectedCompany, selectedYear, item.box390)" title="Valor manual forzado" class="inline-block text-amber-600 font-bold bg-amber-100 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide">
-                                                        Ajustado
+                                                    <span x-show="hasOverride(selectedCompany, selectedYear, item.box390)" class="inline-block text-amber-600 font-bold bg-amber-100 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide">
+                                                        Manual
                                                     </span>
                                                     <span x-show="!hasOverride(selectedCompany, selectedYear, item.box390)" class="inline-block text-slate-400 text-[9px] uppercase tracking-wide">
                                                         Auto
@@ -266,26 +469,20 @@
     </main>
 
     <script>
-        // Configuración inicial de PDF.js de Mozilla
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
         function app() {
             return {
-                // Estados de control
                 loading: false,
                 loadingStatus: '',
                 showDebug: false,
                 rawTextPreview: '',
                 
-                // Base de datos en memoria
                 companies: {}, 
                 records: {},   
                 overrides: {}, 
                 
-                // Filtros de navegación
                 selectedCompany: '',
                 selectedYear: '',
-                availableYears: ['2023', '2024', '2025'],
+                availableYears: ['2023', '2024', '2025'], // Lista base
                 currentTab: '303',
                 
                 toast: {
@@ -296,25 +493,28 @@
 
                 db: null,
 
-                // Catálogo de casillas críticas del modelo 303 (Incluyendo compensaciones de periodos anteriores)
                 mappedBoxes303: [
-                    { box303: '01', label: 'Régimen general - Base imponible al 4%' },
+                    { box303: '01', label: 'Régimen general - Base Imponible al 4%' },
                     { box303: '03', label: 'Régimen general - Cuota al 4%' },
-                    { box303: '04', label: 'Régimen general - Base imponible al 10%' },
+                    { box303: '04', label: 'Régimen general - Base Imponible al 10%' },
                     { box303: '06', label: 'Régimen general - Cuota al 10%' },
-                    { box303: '07', label: 'Régimen general - Base imponible al 21%' },
+                    { box303: '07', label: 'Régimen general - Base Imponible al 21%' },
                     { box303: '09', label: 'Régimen general - Cuota al 21%' },
+                    { box303: '10', label: 'Adq. Intracomunitarias de Bienes/Servicios - Base' },
+                    { box303: '11', label: 'Adq. Intracomunitarias de Bienes/Servicios - Cuota' },
+                    { box303: '12', label: 'Inversión del Sujeto Pasivo - Base' },
+                    { box303: '13', label: 'Inversión del Sujeto Pasivo - Cuota' },
                     { box303: '27', label: 'Total Cuota de IVA Devengado' },
-                    { box303: '28', label: 'Adquisiciones Interiores Corrientes - Base' },
-                    { box303: '29', label: 'Adquisiciones Interiores Corrientes - Cuota' },
-                    { box303: '30', label: 'Adquisiciones Interiores Bienes Inversión - Base' },
-                    { box303: '31', label: 'Adquisiciones Interiores Bienes Inversión - Cuota' },
+                    { box303: '28', label: 'Op. Interiores Corrientes - Base' },
+                    { box303: '29', label: 'Op. Interiores Corrientes - Cuota' },
+                    { box303: '30', label: 'Op. Interiores Bienes Inversión - Base' },
+                    { box303: '31', label: 'Op. Interiores Bienes Inversión - Cuota' },
                     { box303: '45', label: 'Total IVA Deducible' },
-                    { box303: '110', label: 'Cuotas a compensar de períodos anteriores (Ptes. inicio período)' },
+                    { box303: '59', label: 'Entregas Intracomunitarias de Bienes/Servicios exentas' },
+                    { box303: '110', label: 'Cuotas a compensar pendientes de períodos anteriores' },
                     { box303: '46', label: 'Resultado de la Liquidación' }
                 ],
 
-                // Mapeo estructurado para construir el Modelo 390
                 mapping390: [
                     { box390: '01', label: 'Base Imponible al 4%', sources: ['01'] },
                     { box390: '02', label: 'Cuota Devengada al 4%', sources: ['03'] },
@@ -322,13 +522,18 @@
                     { box390: '04', label: 'Cuota Devengada al 10%', sources: ['06'] },
                     { box390: '05', label: 'Base Imponible al 21%', sources: ['07'] },
                     { box390: '06', label: 'Cuota Devengada al 21%', sources: ['09'] },
+                    { box390: '21', label: 'Adquisiciones Intracomunitarias - Base', sources: ['10'] },
+                    { box390: '22', label: 'Adquisiciones Intracomunitarias - Cuota', sources: ['11'] },
+                    { box390: '27', label: 'Inversión del Sujeto Pasivo - Base', sources: ['12'] },
+                    { box390: '28', label: 'Inversión del Sujeto Pasivo - Cuota', sources: ['13'] },
                     { box390: '64', label: 'Total IVA Devengado Acumulado', sources: ['27'] },
                     { box390: '190', label: 'Op. Interiores Corrientes - Base Deducible', sources: ['28'] },
                     { box390: '191', label: 'Op. Interiores Corrientes - Cuota Deducible', sources: ['29'] },
                     { box390: '192', label: 'Op. Interiores Bienes Inversión - Base Deducible', sources: ['30'] },
                     { box390: '193', label: 'Op. Interiores Bienes Inversión - Cuota Deducible', sources: ['31'] },
                     { box390: '232', label: 'Total IVA Deducible Acumulado', sources: ['45'] },
-                    { box390: '84', label: 'Cuotas a compensar de períodos anteriores aplicadas', sources: ['110'] },
+                    { box390: '103', label: 'Entregas Intracomunitarias de bienes exentas', sources: ['59'] },
+                    { box390: '84', label: 'Suma de cuotas a compensar acumuladas', sources: ['110'] },
                     { box390: '658', label: 'Resultado de Liquidaciones Final', sources: ['46'] }
                 ],
 
@@ -377,6 +582,9 @@
                         const cursor = e.target.result;
                         if (cursor) {
                             this.records[cursor.key] = cursor.value;
+                            // Cargar años detectados que no existan en la lista predeterminada
+                            const yearFromKey = cursor.key.split('_')[1];
+                            this.registerYearIfNeeded(yearFromKey);
                             cursor.continue();
                         }
                     };
@@ -390,6 +598,13 @@
                             cursor.continue();
                         }
                     };
+                },
+
+                registerYearIfNeeded(year) {
+                    if (year && !this.availableYears.includes(year)) {
+                        this.availableYears.push(year);
+                        this.availableYears.sort((a, b) => b - a);
+                    }
                 },
 
                 saveLocal(storeName, key, value) {
@@ -421,10 +636,10 @@
                     
                     this.selectedCompany = nif;
                     this.selectedYear = new Date().getFullYear().toString();
+                    this.registerYearIfNeeded(this.selectedYear);
                     this.showToast("Empresa creada correctamente");
                 },
 
-                // Lector de PDF adaptado a la distribución de textos de la AEAT
                 async handlePdfUpload(event) {
                     const files = event.target.files;
                     if (!files.length) return;
@@ -435,17 +650,15 @@
                     for (let i = 0; i < files.length; i++) {
                         try {
                             const file = files[i];
-                            this.loadingStatus = `Leyendo ${file.name}...`;
+                            this.loadingStatus = `Analizando ${file.name}...`;
                             const arrayBuffer = await file.arrayBuffer();
                             
-                            // Cargar documento PDF
                             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                             let fullTextList = [];
 
                             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                                 const page = await pdf.getPage(pageNum);
                                 const textContent = await page.getTextContent();
-                                // Mapear cada elemento con su texto plano respetando el orden de lectura interna
                                 textContent.items.forEach(item => {
                                     if (item.str && item.str.trim() !== '') {
                                         fullTextList.push(item.str.trim());
@@ -454,37 +667,36 @@
                             }
 
                             const cleanedTextString = fullTextList.join(" ");
-                            this.rawTextPreview = cleanedTextString; // Enviar al visor de depuración
+                            this.rawTextPreview = cleanedTextString;
 
                             const parseResult = this.parseTaxPdfTextAdvanced(fullTextList, cleanedTextString);
                             if (parseResult) {
                                 this.saveParsedResult(parseResult);
                                 correctCount++;
                             } else {
-                                this.showToast(`No se detectó el formato oficial del Modelo 303 en: ${file.name}`, "error");
+                                this.showToast(`Estructura no compatible en: ${file.name}`, "error");
                             }
 
                         } catch (err) {
                             console.error(err);
-                            this.showToast("Error crítico al analizar el archivo PDF.", "error");
+                            this.showToast("Error crítico al leer el archivo PDF.", "error");
                         }
                     }
 
                     this.loading = false;
                     this.loadingStatus = '';
                     if (correctCount > 0) {
-                        this.showToast(`Se han consolidado ${correctCount} declaraciones con éxito.`);
+                        this.showToast(`Se han consolidado ${correctCount} declaraciones.`);
                     }
                 },
 
-                // Algoritmo refinado para buscar e identificar casillas y datos de la empresa
+                // Extracción mejorada por cercanía y tolerancia a desorden
                 parseTaxPdfTextAdvanced(tokenList, fullText) {
-                    // Verificación obligatoria de compatibilidad del modelo
                     if (!fullText.includes("303") && !fullText.includes("Liquidación")) {
                         return null;
                     }
 
-                    // 1. Detección Inteligente del NIF de la Empresa
+                    // 1. Identificar NIF
                     let nif = '';
                     const nifRegex = /\b([A-HJ-NP-S-W]\d{7}[A-Z\d]|\d{8}[A-Z])\b/i;
                     const nifMatch = fullText.match(nifRegex);
@@ -492,7 +704,6 @@
                     if (nifMatch) {
                         nif = nifMatch[1].toUpperCase();
                     } else {
-                        // Búsqueda por palabras clave alternativas
                         const indexNif = tokenList.findIndex(t => t.toLowerCase().includes("n.i.f.") || t.toLowerCase() === 'nif');
                         if (indexNif !== -1 && tokenList[indexNif + 1]) {
                             nif = tokenList[indexNif + 1].toUpperCase();
@@ -500,34 +711,30 @@
                     }
                     if (!nif) nif = 'NIF_DESCONOCIDO';
 
-                    // 2. Detección Inteligente de la Razón Social / Nombre
-                    let name = 'Empresa Nueva Importada';
+                    // 2. Identificar Razón Social
+                    let name = 'Empresa Importada';
                     const nifIndex = tokenList.indexOf(nif);
                     if (nifIndex !== -1 && tokenList[nifIndex + 1]) {
-                        // La AEAT habitualmente coloca el Nombre inmediatamente junto al NIF en el flujo de datos
                         let potentialName = tokenList[nifIndex + 1];
                         if (potentialName.length > 5 && !potentialName.includes("303") && !potentialName.includes("Página")) {
                             name = potentialName.replace(/[:]/g, '').trim();
                         }
                     } else {
-                        // Método secundario por patrón
                         const nameMatch = fullText.match(/(?:Razón social|Apellidos y nombre)\s*[:]?\s*([^0-9]{8,60})/i);
                         if (nameMatch && nameMatch[1]) {
                             name = nameMatch[1].trim();
                         }
                     }
+                    name = name.replace(/Sujeto pasivo|Declarante|Espacio reservado para la etiqueta|Etiqueta/gi, '').trim();
 
-                    // Limpieza de rastros de cabecera en el nombre
-                    name = name.replace(/Sujeto pasivo|Declarante|Espacio reservado para la etiqueta/gi, '').trim();
-
-                    // 3. Detección de Año Fiscal
+                    // 3. Identificar Año
                     let year = new Date().getFullYear().toString();
                     const yearMatch = fullText.match(/\b(202\d)\b/);
                     if (yearMatch) {
                         year = yearMatch[1];
                     }
 
-                    // 4. Detección del Periodo (Trimestral o Mensual convertido)
+                    // 4. Identificar Periodo Trimestral
                     let period = '1T';
                     const periodMatch = fullText.match(/\b(1T|2T|3T|4T|1-T|2-T|3-T|4-T|01|02|03|04|05|06|07|08|09|10|11|12)\b/i);
                     if (periodMatch) {
@@ -538,16 +745,17 @@
                         else if (['10', '11', '12', '4T'].includes(matchedPeriod)) period = '4T';
                     }
 
-                    // 5. Extracción por proximidad de casillas monetarias
+                    // 5. Extracción por proximidad de casillas
                     const values = {};
                     this.mappedBoxes303.forEach(target => {
                         let extractedVal = 0;
                         
                         // Recorremos la lista de palabras del PDF buscando el identificador de casilla
                         for (let i = 0; i < tokenList.length; i++) {
-                            const token = tokenList[i].replace(/[\[\]]/g, ''); // Limpiar [01] -> 01
+                            const token = tokenList[i].replace(/[\[\]]/g, '').replace(/^0+/, ''); // Limpiar [01] -> 1
+                            const cleanTarget = target.box303.replace(/^0+/, ''); // Limpiar 01 -> 1
                             
-                            if (token === target.box303) {
+                            if (token === cleanTarget) {
                                 // Buscamos en los siguientes 5 elementos el primer número con formato decimal válido
                                 for (let offset = 1; offset <= 5; offset++) {
                                     if (tokenList[i + offset]) {
@@ -580,6 +788,9 @@
                     this.records[recordKey] = data.values;
                     this.saveLocal("records", recordKey, data.values);
 
+                    // Registrar y autoseleccionar el año, añadiéndolo al desplegable si es nuevo
+                    this.registerYearIfNeeded(data.year);
+                    
                     this.selectedCompany = data.nif;
                     this.selectedYear = data.year;
                 },
@@ -653,77 +864,4 @@
                 },
 
                 deleteActiveYearData() {
-                    if (confirm(`¿Seguro que deseas vaciar todos los registros del año fiscal ${this.selectedYear}?`)) {
-                        const periods = ['1T', '2T', '3T', '4T'];
-                        periods.forEach(p => {
-                            const key = `${this.selectedCompany}_${this.selectedYear}_${p}`;
-                            delete this.records[key];
-                            this.saveLocal("records", key, null);
-                        });
-
-                        this.mapping390.forEach(item => {
-                            const key = `${this.selectedCompany}_${this.selectedYear}_${item.box390}`;
-                            delete this.overrides[key];
-                            this.saveLocal("overrides", key, null);
-                        });
-
-                        this.showToast("Datos borrados localmente.");
-                    }
-                },
-
-                exportData() {
-                    const dataPayload = {
-                        companies: this.companies,
-                        records: this.records,
-                        overrides: this.overrides
-                    };
-
-                    const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `Backup_IVA_${this.selectedCompany || 'General'}_${new Date().toISOString().slice(0,10)}.json`;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                    this.showToast("Copia de seguridad descargada correctamente.");
-                },
-
-                importData(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const parsed = JSON.parse(e.target.result);
-                            
-                            if (parsed.companies && parsed.records && parsed.overrides) {
-                                Object.assign(this.companies, parsed.companies);
-                                Object.assign(this.records, parsed.records);
-                                Object.assign(this.overrides, parsed.overrides);
-
-                                const transaction = this.db.transaction(["companies", "records", "overrides"], "readwrite");
-                                
-                                Object.keys(parsed.companies).forEach(k => transaction.objectStore("companies").put(parsed.companies[k]));
-                                Object.keys(parsed.records).forEach(k => transaction.objectStore("records").put(parsed.records[k], k));
-                                Object.keys(parsed.overrides).forEach(k => transaction.objectStore("overrides").put(parsed.overrides[k], k));
-
-                                this.showToast("Base de datos de copia de seguridad restaurada.");
-                                if (Object.keys(this.companies).length > 0) {
-                                    this.selectedCompany = Object.keys(this.companies)[0];
-                                    this.selectedYear = new Date().getFullYear().toString();
-                                }
-                            } else {
-                                this.showToast("El archivo JSON no contiene la estructura del acumulador.", "error");
-                            }
-                        } catch (err) {
-                            this.showToast("No se pudo leer el archivo de copia de seguridad.", "error");
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-            };
-        }
-    </script>
-</body>
-</html>
+                    if (conf
