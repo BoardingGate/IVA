@@ -22,7 +22,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Consolidación con diseño idéntico al Modelo Oficial 303</p>
+                    <p class="text-xs text-blue-200">Extractor de alta precisión por coordenadas espaciales</p>
                 </div>
             </div>
             
@@ -60,7 +60,7 @@
                         <div class="text-center space-y-2 pointer-events-none">
                             <svg class="w-8 h-8 text-slate-400 group-hover:text-blue-500 mx-auto transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                             <p class="text-xs font-semibold text-slate-600">Suelte aquí sus PDFs</p>
-                            <p class="text-[10px] text-slate-400">Extrae NIF, Empresa, Año e Importes</p>
+                            <p class="text-[10px] text-slate-400">Analizador espacial de alta precisión</p>
                         </div>
                     </div>
 
@@ -103,7 +103,7 @@
 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4" x-show="rawTextPreview">
                     <button @click="showDebug = !showDebug" class="text-xs font-bold text-slate-500 hover:text-slate-800 flex justify-between w-full">
-                        <span>Lector de texto plano</span>
+                        <span>Lector de texto plano (Línea a línea)</span>
                         <span x-text="showDebug ? '[-] Ocultar' : '[+] Depurar'"></span>
                     </button>
                     <div x-show="showDebug" class="mt-2">
@@ -119,7 +119,7 @@
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center space-y-3">
                         <svg class="w-16 h-16 text-slate-300 mx-auto" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>
                         <h3 class="text-lg font-bold text-slate-700">Por favor, selecciona o importa una declaración</h3>
-                        <p class="text-slate-500 text-sm max-w-md mx-auto">Arrastra tus archivos de autoliquidación del IVA para comenzar el cuadre de importes de forma automatizada.</p>
+                        <p class="text-slate-500 text-sm max-w-md mx-auto">Sube tus autoliquidaciones oficiales de la AEAT (tanto modelos interactivos como copias impresas en PDF digital) para procesar los datos.</p>
                     </div>
                 </template>
 
@@ -158,7 +158,6 @@
                                     <span class="text-[10px] bg-blue-700 text-blue-100 px-2 py-0.5 rounded font-mono">MODELO 303</span>
                                 </div>
                                 <div class="p-4 space-y-4">
-                                    <!-- Grid de Régimen General -->
                                     <div class="grid grid-cols-12 gap-2 text-center font-semibold text-xs text-slate-500 pb-2 border-b border-slate-100">
                                         <div class="col-span-4 text-left">Concepto de Liquidación</div>
                                         <div class="col-span-2">Base Imponible</div>
@@ -169,7 +168,6 @@
                                     <!-- Fila 4% -->
                                     <div class="grid grid-cols-12 gap-2 items-center text-xs">
                                         <div class="col-span-4 font-medium">Recargo y Régimen General al 4%</div>
-                                        <!-- Base Imponible (Para simplificar, mostramos inputs por trimestre) -->
                                         <div class="col-span-2 space-y-1">
                                             <template x-for="p in ['1T','2T','3T','4T']">
                                                 <div class="flex items-center gap-1">
@@ -482,7 +480,7 @@
                 
                 selectedCompany: '',
                 selectedYear: '',
-                availableYears: ['2023', '2024', '2025'], // Lista base
+                availableYears: ['2023', '2024', '2025'],
                 currentTab: '303',
                 
                 toast: {
@@ -582,7 +580,6 @@
                         const cursor = e.target.result;
                         if (cursor) {
                             this.records[cursor.key] = cursor.value;
-                            // Cargar años detectados que no existan en la lista predeterminada
                             const yearFromKey = cursor.key.split('_')[1];
                             this.registerYearIfNeeded(yearFromKey);
                             cursor.continue();
@@ -650,128 +647,155 @@
                     for (let i = 0; i < files.length; i++) {
                         try {
                             const file = files[i];
-                            this.loadingStatus = `Analizando ${file.name}...`;
+                            this.loadingStatus = `Leyendo espacialmente ${file.name}...`;
                             const arrayBuffer = await file.arrayBuffer();
                             
                             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                            let fullTextList = [];
+                            let fullReconstructedLines = [];
 
                             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                                 const page = await pdf.getPage(pageNum);
-                                const textContent = await page.getTextContent();
-                                textContent.items.forEach(item => {
-                                    if (item.str && item.str.trim() !== '') {
-                                        fullTextList.push(item.str.trim());
-                                    }
-                                });
+                                const pageLines = await this.extractTextLinesByCoordinates(page);
+                                fullReconstructedLines = fullReconstructedLines.concat(pageLines);
                             }
 
-                            const cleanedTextString = fullTextList.join(" ");
-                            this.rawTextPreview = cleanedTextString;
+                            const textReconstruction = fullReconstructedLines.join("\n");
+                            this.rawTextPreview = textReconstruction; // Mostrar para depuración visual
 
-                            const parseResult = this.parseTaxPdfTextAdvanced(fullTextList, cleanedTextString);
+                            const parseResult = this.parseReconstructedLines(fullReconstructedLines);
                             if (parseResult) {
                                 this.saveParsedResult(parseResult);
                                 correctCount++;
                             } else {
-                                this.showToast(`Estructura no compatible en: ${file.name}`, "error");
+                                this.showToast(`El documento no parece ser un Modelo 303 compatible: ${file.name}`, "error");
                             }
 
                         } catch (err) {
                             console.error(err);
-                            this.showToast("Error crítico al leer el archivo PDF.", "error");
+                            this.showToast("Error de renderizado/lectura del PDF.", "error");
                         }
                     }
 
                     this.loading = false;
                     this.loadingStatus = '';
                     if (correctCount > 0) {
-                        this.showToast(`Se han consolidado ${correctCount} declaraciones.`);
+                        this.showToast(`Procesados con éxito: ${correctCount} declaraciones.`);
                     }
                 },
 
-                // Extracción mejorada por cercanía y tolerancia a desorden
-                parseTaxPdfTextAdvanced(tokenList, fullText) {
-                    if (!fullText.includes("303") && !fullText.includes("Liquidación")) {
+                // Algoritmo de ordenación y agrupación espacial de texto en el papel
+                async extractTextLinesByCoordinates(page) {
+                    const textContent = await page.getTextContent();
+                    const items = textContent.items;
+                    if (!items || items.length === 0) return [];
+
+                    // Umbral vertical (en puntos) para agrupar palabras en una misma línea
+                    const thresholdY = 5;
+
+                    // Ordenar por coordenada Y descendente (de arriba a abajo) y luego por coordenada X ascendente (de izquierda a derecha)
+                    // transform[5] representa la coordenada Y, transform[4] representa la coordenada X
+                    items.sort((a, b) => {
+                        const yA = a.transform[5];
+                        const yB = b.transform[5];
+                        if (Math.abs(yB - yA) > thresholdY) {
+                            return yB - yA;
+                        }
+                        return a.transform[4] - b.transform[4];
+                    });
+
+                    // Agrupar visualmente
+                    const lines = [];
+                    let currentLineItems = [];
+                    let lastY = items[0].transform[5];
+
+                    items.forEach(item => {
+                        const currentY = item.transform[5];
+                        if (Math.abs(currentY - lastY) > thresholdY) {
+                            // Guardar la línea anterior uniendo los textos con un espacio
+                            lines.push(currentLineItems.join(" "));
+                            currentLineItems = [];
+                            lastY = currentY;
+                        }
+                        currentLineItems.push(item.str);
+                    });
+
+                    if (currentLineItems.length > 0) {
+                        lines.push(currentLineItems.join(" "));
+                    }
+
+                    return lines;
+                },
+
+                // Extracción analítica de las líneas visuales reconstruidas
+                parseReconstructedLines(lines) {
+                    const fullTextUnified = lines.join(" ");
+                    
+                    if (!fullTextUnified.includes("303") && !fullTextUnified.includes("Liquidación")) {
                         return null;
                     }
 
-                    // 1. Identificar NIF
+                    // 1. Extraer NIF
                     let nif = '';
-                    const nifRegex = /\b([A-HJ-NP-S-W]\d{7}[A-Z\d]|\d{8}[A-Z])\b/i;
-                    const nifMatch = fullText.match(nifRegex);
-                    
-                    if (nifMatch) {
-                        nif = nifMatch[1].toUpperCase();
-                    } else {
-                        const indexNif = tokenList.findIndex(t => t.toLowerCase().includes("n.i.f.") || t.toLowerCase() === 'nif');
-                        if (indexNif !== -1 && tokenList[indexNif + 1]) {
-                            nif = tokenList[indexNif + 1].toUpperCase();
-                        }
-                    }
-                    if (!nif) nif = 'NIF_DESCONOCIDO';
+                    const nifMatch = fullTextUnified.match(/\b([A-HJ-NP-S-W]\d{7}[A-Z\d]|\d{8}[A-Z])\b/i);
+                    if (nifMatch) nif = nifMatch[1].toUpperCase();
 
-                    // 2. Identificar Razón Social
+                    // 2. Extraer Razón Social
                     let name = 'Empresa Importada';
-                    const nifIndex = tokenList.indexOf(nif);
-                    if (nifIndex !== -1 && tokenList[nifIndex + 1]) {
-                        let potentialName = tokenList[nifIndex + 1];
-                        if (potentialName.length > 5 && !potentialName.includes("303") && !potentialName.includes("Página")) {
-                            name = potentialName.replace(/[:]/g, '').trim();
-                        }
-                    } else {
-                        const nameMatch = fullText.match(/(?:Razón social|Apellidos y nombre)\s*[:]?\s*([^0-9]{8,60})/i);
-                        if (nameMatch && nameMatch[1]) {
-                            name = nameMatch[1].trim();
+                    for (let line of lines) {
+                        if (line.includes("Apellidos y nombre o razón social") || line.includes("Sujeto pasivo")) {
+                            // Limpiar etiquetas de la AEAT para dejar solo el nombre real
+                            let cleanedLine = line.replace(/Sujeto pasivo|Apellidos y nombre o razón social|[:]/gi, '').trim();
+                            if (cleanedLine.length > 5) {
+                                name = cleanedLine;
+                                break;
+                            }
                         }
                     }
-                    name = name.replace(/Sujeto pasivo|Declarante|Espacio reservado para la etiqueta|Etiqueta/gi, '').trim();
 
-                    // 3. Identificar Año
+                    // 3. Extraer Ejercicio (Año)
                     let year = new Date().getFullYear().toString();
-                    const yearMatch = fullText.match(/\b(202\d)\b/);
-                    if (yearMatch) {
-                        year = yearMatch[1];
+                    for (let line of lines) {
+                        const yearMatch = line.match(/Ejercicio\s*[:]?\s*(20\d{2})/i);
+                        if (yearMatch) {
+                            year = yearMatch[1];
+                            break;
+                        }
                     }
 
-                    // 4. Identificar Periodo Trimestral
+                    // 4. Extraer Periodo (Trimestre)
                     let period = '1T';
-                    const periodMatch = fullText.match(/\b(1T|2T|3T|4T|1-T|2-T|3-T|4-T|01|02|03|04|05|06|07|08|09|10|11|12)\b/i);
-                    if (periodMatch) {
-                        let matchedPeriod = periodMatch[1].toUpperCase().replace('-', '');
-                        if (['01', '02', '03', '1T'].includes(matchedPeriod)) period = '1T';
-                        else if (['04', '05', '06', '2T'].includes(matchedPeriod)) period = '2T';
-                        else if (['07', '08', '09', '3T'].includes(matchedPeriod)) period = '3T';
-                        else if (['10', '11', '12', '4T'].includes(matchedPeriod)) period = '4T';
+                    for (let line of lines) {
+                        const periodMatch = line.match(/(?:Periodo|Período)\s*[:]?\s*([1-4]\s*-[sT]|\b[1-4]T\b|\b0[1-9]\b|\b1[0-2]\b)/i);
+                        if (periodMatch) {
+                            let rawPeriod = periodMatch[1].toUpperCase().replace(/[\s-]/g, '');
+                            if (['01','02','03','1T'].includes(rawPeriod)) period = '1T';
+                            else if (['04','05','06','2T'].includes(rawPeriod)) period = '2T';
+                            else if (['07','08','09','3T'].includes(rawPeriod)) period = '3T';
+                            else if (['10','11','12','4T'].includes(rawPeriod)) period = '4T';
+                            break;
+                        }
                     }
 
-                    // 5. Extracción por proximidad de casillas
+                    // 5. Extracción de casillas
                     const values = {};
                     this.mappedBoxes303.forEach(target => {
-                        let extractedVal = 0;
+                        let finalVal = 0;
+                        const boxNum = target.box303;
                         
-                        // Recorremos la lista de palabras del PDF buscando el identificador de casilla
-                        for (let i = 0; i < tokenList.length; i++) {
-                            const token = tokenList[i].replace(/[\[\]]/g, '').replace(/^0+/, ''); // Limpiar [01] -> 1
-                            const cleanTarget = target.box303.replace(/^0+/, ''); // Limpiar 01 -> 1
-                            
-                            if (token === cleanTarget) {
-                                // Buscamos en los siguientes 5 elementos el primer número con formato decimal válido
-                                for (let offset = 1; offset <= 5; offset++) {
-                                    if (tokenList[i + offset]) {
-                                        const candidate = tokenList[i + offset].trim();
-                                        // Filtro de formato decimal español (ej: 12.300,50 o -1.000,00 o 0,00)
-                                        if (/^-?[\d.]+(?:,\d{2})?$/.test(candidate)) {
-                                            let cleaned = candidate.replace(/\./g, '').replace(',', '.');
-                                            extractedVal = parseFloat(cleaned) || 0;
-                                            break;
-                                        }
-                                    }
-                                }
+                        // Generar patrón robusto: la casilla exacta seguida opcionalmente de puntos y un número con decimales
+                        // Ej: "01  12.500,00" o "110..... 450,23" o "[46] -230,00"
+                        const escapedBox = boxNum.replace(/^0+/, ''); // Para contemplar casillas escritas sin cero inicial
+                        const regex = new RegExp(`\\b(?:0?${escapedBox}|\\[0?${escapedBox}\\])\\b[\\s.]*(-?[\\d.]+,\\d{2})`);
+
+                        for (let line of lines) {
+                            const match = line.match(regex);
+                            if (match && match[1]) {
+                                let cleanedNum = match[1].replace(/\./g, '').replace(',', '.');
+                                finalVal = parseFloat(cleanedNum) || 0;
+                                break;
                             }
-                            if (extractedVal !== 0) break; // Detener búsqueda si ya tiene valor
                         }
-                        values[target.box303] = extractedVal;
+                        values[boxNum] = finalVal;
                     });
 
                     return { nif, name, year, period, values };
@@ -788,7 +812,6 @@
                     this.records[recordKey] = data.values;
                     this.saveLocal("records", recordKey, data.values);
 
-                    // Registrar y autoseleccionar el año, añadiéndolo al desplegable si es nuevo
                     this.registerYearIfNeeded(data.year);
                     
                     this.selectedCompany = data.nif;
