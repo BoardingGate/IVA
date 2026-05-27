@@ -864,4 +864,81 @@
                 },
 
                 deleteActiveYearData() {
-                    if (conf
+                    if (confirm(`¿Seguro que deseas vaciar todos los registros del año fiscal ${this.selectedYear}?`)) {
+                        const periods = ['1T', '2T', '3T', '4T'];
+                        periods.forEach(p => {
+                            const key = `${this.selectedCompany}_${this.selectedYear}_${p}`;
+                            delete this.records[key];
+                            this.saveLocal("records", key, null);
+                        });
+
+                        this.mapping390.forEach(item => {
+                            const key = `${this.selectedCompany}_${this.selectedYear}_${item.box390}`;
+                            delete this.overrides[key];
+                            this.saveLocal("overrides", key, null);
+                        });
+
+                        this.showToast("Datos borrados localmente.");
+                    }
+                },
+
+                exportData() {
+                    const dataPayload = {
+                        companies: this.companies,
+                        records: this.records,
+                        overrides: this.overrides
+                    };
+
+                    const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `Backup_IVA_${this.selectedCompany || 'General'}_${new Date().toISOString().slice(0,10)}.json`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    this.showToast("Copia de seguridad descargada correctamente.");
+                },
+
+                importData(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const parsed = JSON.parse(e.target.result);
+                            
+                            if (parsed.companies && parsed.records && parsed.overrides) {
+                                Object.assign(this.companies, parsed.companies);
+                                Object.assign(this.records, parsed.records);
+                                Object.assign(this.overrides, parsed.overrides);
+
+                                const transaction = this.db.transaction(["companies", "records", "overrides"], "readwrite");
+                                
+                                Object.keys(parsed.companies).forEach(k => transaction.objectStore("companies").put(parsed.companies[k]));
+                                Object.keys(parsed.records).forEach(k => {
+                                    transaction.objectStore("records").put(parsed.records[k], k);
+                                    const yearFromKey = k.split('_')[1];
+                                    this.registerYearIfNeeded(yearFromKey);
+                                });
+                                Object.keys(parsed.overrides).forEach(k => transaction.objectStore("overrides").put(parsed.overrides[k], k));
+
+                                this.showToast("Base de datos de copia de seguridad restaurada.");
+                                if (Object.keys(this.companies).length > 0) {
+                                    this.selectedCompany = Object.keys(this.companies)[0];
+                                    this.selectedYear = new Date().getFullYear().toString();
+                                }
+                            } else {
+                                this.showToast("El archivo JSON no contiene la estructura esperada.", "error");
+                            }
+                        } catch (err) {
+                            this.showToast("No se pudo leer el archivo de copia de seguridad.", "error");
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+        }
+    </script>
+</body>
+</html>
