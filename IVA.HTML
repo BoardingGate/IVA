@@ -22,7 +22,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Consolidador con recálculo dinámico y diseño oficial unificado</p>
+                    <p class="text-xs text-blue-200">Consolidador contable con motor de coordenadas de alta tolerancia</p>
                 </div>
             </div>
             
@@ -103,7 +103,7 @@
 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4" x-show="rawTextPreview">
                     <button @click="showDebug = !showDebug" class="text-xs font-bold text-slate-500 hover:text-slate-800 flex justify-between w-full">
-                        <span>Lector de texto</span>
+                        <span>Verificador del lector</span>
                         <span x-text="showDebug ? '[-] Ocultar' : '[+] Depurar'"></span>
                     </button>
                     <div x-show="showDebug" class="mt-2">
@@ -522,7 +522,7 @@
                                                         </div>
                                                     </template>
                                                     <template x-if="!row.baseItem">
-                                                        <div class="text-center text-slate-300 py-4 italic">No Aplica Base</div>
+                                                        <div class="text-center text-slate-300 py-4 italic font-medium">No Aplica Base</div>
                                                     </template>
                                                 </td>
 
@@ -617,12 +617,11 @@
                     { box303: '60', label: 'Exportaciones y operaciones asimiladas' },
                     { box303: '120', label: 'Op. no sujetas o acogidas a regímenes especiales' },
                     { box303: '122', label: 'Op. sujetas con inversión de sujeto pasivo' },
-                    { box303: '124', label: 'Op. no sujetas por localización con deducción' },
+                    { box303: '124', label: 'Op. no sujetas por localización con derecho a deducción' },
                     { box303: '110', label: 'Cuotas a compensar de períodos anteriores' },
                     { box303: '46', label: 'Resultado de la Liquidación' }
                 ],
 
-                // Configuración de visualización unificada horizontal del Modelo 390
                 mapping390Horizontal: [
                     { 
                         label: 'Operaciones Régimen General al 4%', 
@@ -656,7 +655,7 @@
                     },
                     { 
                         label: 'Total IVA Devengado Anual', 
-                        description: 'Suma consolidada de todas las cuotas de IVA repercutido [27]',
+                        description: 'Suma de todas las cuotas de IVA repercutido [27]',
                         baseItem: null, 
                         cuotaItem: { box390: '64', sources: ['27'] } 
                     },
@@ -680,49 +679,49 @@
                     },
                     { 
                         label: 'Total IVA Deducible Anual', 
-                        description: 'Suma consolidada de todas las cuotas de IVA deducible soportado [45]',
+                        description: 'Suma de todas las cuotas de IVA soportado [45]',
                         baseItem: null, 
                         cuotaItem: { box390: '232', sources: ['45'] } 
                     },
                     { 
-                        label: 'Entregas Intracomunitarias de bienes exentas', 
-                        description: 'Suma acumulada de información adicional casilla [59]',
+                        label: 'Entregas Intracomunitarias exentas', 
+                        description: 'Suma de la casilla [59] de los 4 trimestres',
                         baseItem: null, 
                         cuotaItem: { box390: '103', sources: ['59'] } 
                     },
                     { 
                         label: 'Exportaciones y Operaciones Asimiladas', 
-                        description: 'Suma acumulada de información adicional casilla [60]',
+                        description: 'Suma de la casilla [60] de los 4 trimestres',
                         baseItem: null, 
                         cuotaItem: { box390: '104', sources: ['60'] } 
                     },
                     { 
                         label: 'Op. no sujetas o acogidas a regímenes especiales', 
-                        description: 'Suma acumulada de información adicional casilla [120]',
+                        description: 'Suma de la casilla [120] de los 4 trimestres',
                         baseItem: null, 
                         cuotaItem: { box390: '110', sources: ['120'] } 
                     },
                     { 
                         label: 'Op. sujetas con inversión de sujeto pasivo', 
-                        description: 'Suma acumulada de información adicional casilla [122]',
+                        description: 'Suma de la casilla [122] de los 4 trimestres',
                         baseItem: null, 
                         cuotaItem: { box390: '112', sources: ['122'] } 
                     },
                     { 
                         label: 'Op. no sujetas por localización con deducción', 
-                        description: 'Suma acumulada de información adicional casilla [124]',
+                        description: 'Suma de la casilla [124] de los 4 trimestres',
                         baseItem: null, 
                         cuotaItem: { box390: '114', sources: ['124'] } 
                     },
                     { 
                         label: 'Cuotas a compensar acumuladas', 
-                        description: 'Suma consolidada de las casillas [110]',
+                        description: 'Suma de la casilla [110] de los 4 trimestres',
                         baseItem: null, 
                         cuotaItem: { box390: '84', sources: ['110'] } 
                     },
                     { 
                         label: 'Resultado de Liquidaciones Final', 
-                        description: 'Consolidación de resultados casilla [46]',
+                        description: 'Suma de la casilla de resultado de liquidación [46]',
                         baseItem: null, 
                         cuotaItem: { box390: '658', sources: ['46'] } 
                     }
@@ -858,7 +857,7 @@
                                 }
                                 const textReconstruction = fullReconstructedLines.join("\n");
                                 this.rawTextPreview = textReconstruction;
-                                parsedResult = this.parseReconstructedLines(fullReconstructedLines);
+                                parsedResult = this.parseReconstructedLines(fullReconstructedLines, this.mappedBoxes303);
                             }
 
                             if (parsedResult) {
@@ -871,7 +870,7 @@
 
                         } catch (err) {
                             console.error(err);
-                            this.showToast("Error de lectura del PDF.");
+                            this.showToast("Error de lectura del PDF.", "error");
                         }
                     }
 
@@ -881,6 +880,9 @@
 
                 async parseViaAcroForms(pdf) {
                     try {
+                        if (typeof pdf.getFieldObjects !== 'function') {
+                            return null;
+                        }
                         const fields = await pdf.getFieldObjects();
                         if (!fields || Object.keys(fields).length === 0) {
                             return null;
@@ -970,7 +972,45 @@
                     return null;
                 },
 
-                parseReconstructedLines(lines) {
+                async extractTextLinesByCoordinates(page) {
+                    const textContent = await page.getTextContent();
+                    // Limpieza preventiva de elementos sin coordenadas nativas del PDF
+                    const items = textContent.items.filter(item => item && item.transform);
+                    if (!items || items.length === 0) return [];
+
+                    const thresholdY = 5;
+
+                    items.sort((a, b) => {
+                        const yA = a.transform[5];
+                        const yB = b.transform[5];
+                        if (Math.abs(yB - yA) > thresholdY) {
+                            return yB - yA;
+                        }
+                        return a.transform[4] - b.transform[4];
+                    });
+
+                    const lines = [];
+                    let currentLineItems = [];
+                    let lastY = items[0].transform[5];
+
+                    items.forEach(item => {
+                        const currentY = item.transform[5];
+                        if (Math.abs(currentY - lastY) > thresholdY) {
+                            lines.push(currentLineItems.join(" "));
+                            currentLineItems = [];
+                            lastY = currentY;
+                        }
+                        currentLineItems.push(item.str);
+                    });
+
+                    if (currentLineItems.length > 0) {
+                        lines.push(currentLineItems.join(" "));
+                    }
+
+                    return lines;
+                },
+
+                parseReconstructedLines(lines, targetBoxes) {
                     const fullTextUnified = lines.join(" ");
                     
                     if (!fullTextUnified.includes("303") && !fullTextUnified.includes("Liquidación")) {
@@ -1014,10 +1054,10 @@
                         }
                     }
 
-                    const targetBoxesClean = this.mappedBoxes303.map(t => t.box303.replace(/^0+/, ''));
+                    const targetBoxesClean = targetBoxes.map(t => t.box303.replace(/^0+/, ''));
 
                     const values = {};
-                    this.mappedBoxes303.forEach(target => {
+                    targetBoxes.forEach(target => {
                         let finalVal = 0;
                         const boxNum = target.box303;
                         const escapedBox = boxNum.replace(/^0+/, ''); 
@@ -1078,7 +1118,6 @@
                     const recordKey = `${data.nif}_${data.year}_${data.period}`;
                     this.records[recordKey] = data.values;
                     
-                    // Asegurar que el guardado inicial ejecute el motor de recálculo sobre el PDF importado
                     this.recalculateTotals303(data.nif, data.year, data.period);
 
                     this.registerYearIfNeeded(data.year);
@@ -1105,7 +1144,6 @@
                     this.updateBox303Value(nif, year, period, box, num);
                 },
 
-                // Guardado con motor de recálculo matemático activo integrado
                 updateBox303Value(nif, year, period, box, val) {
                     const key = `${nif}_${year}_${period}`;
                     if (!this.records[key]) {
@@ -1113,19 +1151,16 @@
                     }
                     this.records[key][box] = val; 
                     
-                    // Ejecutar el motor de recálculo dinámico en el acto
                     this.recalculateTotals303(nif, year, period);
                 },
 
-                // MOTOR DE RECÁLCULO DINÁMICO REACTIVO DE LA LIQUIDACIÓN 303
                 recalculateTotals303(nif, year, period) {
                     const key = `${nif}_${year}_${period}`;
                     if (!this.records[key]) return;
 
                     const record = this.records[key];
 
-                    // 1. Recalcular Total Cuota IVA Devengado [27]
-                    // Suma: Cuota 4% [03] + Cuota 10% [06] + Cuota 21% [09] + Cuota Intra [11] + Cuota ISP [13] + Cuota Modif [15]
+                    // 1. Recalcular Total IVA Devengado [27]
                     const c03 = parseFloat(record['03']) || 0;
                     const c06 = parseFloat(record['06']) || 0;
                     const c09 = parseFloat(record['09']) || 0;
@@ -1137,188 +1172,9 @@
                     record['27'] = totalDevengado;
 
                     // 2. Recalcular Total IVA Deducible [45]
-                    // Suma: Cuota Corrientes [29] + Cuota Inversion [31] + Cuota Intra [37] + Cuota Rectificación [41]
                     const c29 = parseFloat(record['29']) || 0;
                     const c31 = parseFloat(record['31']) || 0;
                     const c37 = parseFloat(record['37']) || 0;
                     const c41 = parseFloat(record['41']) || 0;
 
-                    const totalDeducible = Math.round((c29 + c31 + c37 + c41) * 100) / 100;
-                    record['45'] = totalDeducible;
-
-                    // 3. Recalcular Resultado de la liquidación [46]
-                    // Fórmula oficial: Total Devengado [27] - Total Deducible [45] - Cuotas a compensar anteriores [110]
-                    const c110 = parseFloat(record['110']) || 0;
-                    const resultadoFinal = Math.round((totalDevengado - totalDeducible - c110) * 100) / 100;
-                    record['46'] = resultadoFinal;
-
-                    // Guardar y persistir base de datos reactiva local
-                    this.records[key] = record;
-                    this.saveLocal("records", key, record);
-                },
-
-                calculateSum390(nif, year, item) {
-                    if (!item) return 0;
-                    let total = 0;
-                    const periods = ['1T', '2T', '3T', '4T'];
-                    
-                    periods.forEach(period => {
-                        const key = `${nif}_${year}_${period}`;
-                        if (this.records[key]) {
-                            item.sources.forEach(box303 => {
-                                if (this.records[key][box303]) {
-                                    total += parseFloat(this.records[key][box303]) || 0;
-                                }
-                            });
-                        }
-                    });
-
-                    return Math.round(total * 100) / 100;
-                },
-
-                getOverrideValue(nif, year, box390) {
-                    const key = `${nif}_${year}_${box390}`;
-                    return this.overrides[key] !== undefined ? this.overrides[key] : '';
-                },
-
-                getOverrideValueFormatted(nif, year, box390) {
-                    const val = this.getOverrideValue(nif, year, box390);
-                    return val !== '' ? this.formatSpanishNumber(val) : '';
-                },
-
-                updateOverrideValueFormatted(nif, year, box390, textValue) {
-                    const num = this.parseSpanishNumber(textValue);
-                    this.updateOverrideValue(nif, year, box390, textValue === '' ? '' : num);
-                },
-
-                hasOverride(nif, year, box390) {
-                    const key = `${nif}_${year}_${box390}`;
-                    return this.overrides[key] !== undefined && this.overrides[key] !== '';
-                },
-
-                updateOverrideValue(nif, year, box390, val) {
-                    const key = `${nif}_${year}_${box390}`;
-                    if (val === '') {
-                        delete this.overrides[key];
-                        this.saveLocal("overrides", key, null);
-                    } else {
-                        this.overrides[key] = val;
-                        this.saveLocal("overrides", key, val);
-                    }
-                },
-
-                getFinal390Value(nif, year, item) {
-                    if (!item) return 0;
-                    if (this.hasOverride(nif, year, item.box390)) {
-                        return this.overrides[`${nif}_${year}_${item.box390}`];
-                    }
-                    return this.calculateSum390(nif, year, item);
-                },
-
-                // FORMATEADOR OFICIAL ESPAÑOL: Puntos para millares y comas para decimales
-                formatSpanishNumber(value) {
-                    if (value === undefined || value === null || isNaN(value) || value === '') return '0,00';
-                    return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
-                },
-
-                // PARSER CONTABLE: Limpia puntos y procesa comas en formato decimal plano de JS
-                parseSpanishNumber(string) {
-                    if (!string) return 0;
-                    if (typeof string === 'number') return string;
-                    let cleaned = string.replace(/\./g, '').replace(',', '.');
-                    return parseFloat(cleaned) || 0;
-                },
-
-                formatCurrency(value) {
-                    return this.formatSpanishNumber(value) + " €";
-                },
-
-                deleteActiveYearData() {
-                    if (confirm(`¿Seguro que deseas vaciar todos los registros del año fiscal ${this.selectedYear}?`)) {
-                        const periods = ['1T', '2T', '3T', '4T'];
-                        periods.forEach(p => {
-                            const key = `${this.selectedCompany}_${this.selectedYear}_${p}`;
-                            delete this.records[key];
-                            this.saveLocal("records", key, null);
-                        });
-
-                        this.mapping390Horizontal.forEach(row => {
-                            if (row.baseItem) {
-                                const key = `${this.selectedCompany}_${this.selectedYear}_${row.baseItem.box390}`;
-                                delete this.overrides[key];
-                                this.saveLocal("overrides", key, null);
-                            }
-                            if (row.cuotaItem) {
-                                const key = `${this.selectedCompany}_${this.selectedYear}_${row.cuotaItem.box390}`;
-                                delete this.overrides[key];
-                                this.saveLocal("overrides", key, null);
-                            }
-                        });
-
-                        this.showToast("Datos borrados localmente.");
-                    }
-                },
-
-                exportData() {
-                    const dataPayload = {
-                        companies: this.companies,
-                        records: this.records,
-                        overrides: this.overrides
-                    };
-
-                    const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `Backup_IVA_${this.selectedCompany || 'General'}_${new Date().toISOString().slice(0,10)}.json`;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                    this.showToast("Copia de seguridad descargada correctamente.");
-                },
-
-                importData(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const parsed = JSON.parse(e.target.result);
-                            
-                            if (parsed.companies && parsed.records && parsed.overrides) {
-                                Object.assign(this.companies, parsed.companies);
-                                Object.assign(this.records, parsed.records);
-                                Object.assign(this.overrides, parsed.overrides);
-
-                                const transaction = this.db.transaction(["companies", "records", "overrides"], "readwrite");
-                                
-                                Object.keys(parsed.companies).forEach(k => transaction.objectStore("companies").put(parsed.companies[k]));
-                                Object.keys(parsed.records).forEach(k => {
-                                    transaction.objectStore("records").put(parsed.records[k], k);
-                                    const yearFromKey = k.split('_')[1];
-                                    this.registerYearIfNeeded(yearFromKey);
-                                    // Asegurar cálculo completo en datos importados
-                                    const parts = k.split('_');
-                                    this.recalculateTotals303(parts[0], parts[1], parts[2]);
-                                });
-                                Object.keys(parsed.overrides).forEach(k => transaction.objectStore("overrides").put(parsed.overrides[k], k));
-
-                                this.showToast("Base de datos de copia de seguridad restaurada.");
-                                if (Object.keys(this.companies).length > 0) {
-                                    this.selectedCompany = Object.keys(this.companies)[0];
-                                    this.selectedYear = new Date().getFullYear().toString();
-                                }
-                            } else {
-                                this.showToast("El archivo JSON no contiene la estructura esperada.", "error");
-                            }
-                        } catch (err) {
-                            this.showToast("No se pudo leer el archivo de copia de seguridad.", "error");
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-            };
-        }
-    </script>
-</body>
-</html>
+                    const totalDeducible = Math.round((c29 + c31 + c37 + c41)
