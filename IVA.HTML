@@ -22,7 +22,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Extractor de alta precisión por coordenadas espaciales</p>
+                    <p class="text-xs text-blue-200">Consolidador híbrido de precisión (AcroForms + Filtro inteligente)</p>
                 </div>
             </div>
             
@@ -60,7 +60,7 @@
                         <div class="text-center space-y-2 pointer-events-none">
                             <svg class="w-8 h-8 text-slate-400 group-hover:text-blue-500 mx-auto transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                             <p class="text-xs font-semibold text-slate-600">Suelte aquí sus PDFs</p>
-                            <p class="text-[10px] text-slate-400">Analizador espacial de alta precisión</p>
+                            <p class="text-[10px] text-slate-400">Extractor híbrido interactivo</p>
                         </div>
                     </div>
 
@@ -103,7 +103,7 @@
 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4" x-show="rawTextPreview">
                     <button @click="showDebug = !showDebug" class="text-xs font-bold text-slate-500 hover:text-slate-800 flex justify-between w-full">
-                        <span>Lector de texto plano (Línea a línea)</span>
+                        <span>Lector de texto plano</span>
                         <span x-text="showDebug ? '[-] Ocultar' : '[+] Depurar'"></span>
                     </button>
                     <div x-show="showDebug" class="mt-2">
@@ -119,7 +119,7 @@
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center space-y-3">
                         <svg class="w-16 h-16 text-slate-300 mx-auto" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>
                         <h3 class="text-lg font-bold text-slate-700">Por favor, selecciona o importa una declaración</h3>
-                        <p class="text-slate-500 text-sm max-w-md mx-auto">Sube tus autoliquidaciones oficiales de la AEAT (tanto modelos interactivos como copias impresas en PDF digital) para procesar los datos.</p>
+                        <p class="text-slate-500 text-sm max-w-md mx-auto">Sube tus autoliquidaciones oficiales de la AEAT en PDF. El lector analizará los campos de datos interactivos para lograr un cuadre exacto.</p>
                     </div>
                 </template>
 
@@ -647,53 +647,154 @@
                     for (let i = 0; i < files.length; i++) {
                         try {
                             const file = files[i];
-                            this.loadingStatus = `Leyendo espacialmente ${file.name}...`;
+                            this.loadingStatus = `Analizando ${file.name}...`;
                             const arrayBuffer = await file.arrayBuffer();
                             
                             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                            let fullReconstructedLines = [];
+                            
+                            // 1. Intentar extracción prioritaria por Campos Interactivos (AcroForms)
+                            let parsedResult = await this.parseViaAcroForms(pdf);
+                            let methodUsed = "Campos de Formulario (Alta Precisión)";
 
-                            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                                const page = await pdf.getPage(pageNum);
-                                const pageLines = await this.extractTextLinesByCoordinates(page);
-                                fullReconstructedLines = fullReconstructedLines.concat(pageLines);
+                            // 2. Si no tiene AcroForms, recurrir a la Reconstrucción por Coordenadas espacial
+                            if (!parsedResult) {
+                                methodUsed = "Reconstrucción Espacial Heurística (Filtro Inteligente)";
+                                let fullReconstructedLines = [];
+                                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                                    const page = await pdf.getPage(pageNum);
+                                    const pageLines = await this.extractTextLinesByCoordinates(page);
+                                    fullReconstructedLines = fullReconstructedLines.concat(pageLines);
+                                }
+                                const textReconstruction = fullReconstructedLines.join("\n");
+                                this.rawTextPreview = textReconstruction;
+                                parsedResult = this.parseReconstructedLines(fullReconstructedLines);
                             }
 
-                            const textReconstruction = fullReconstructedLines.join("\n");
-                            this.rawTextPreview = textReconstruction; // Mostrar para depuración visual
-
-                            const parseResult = this.parseReconstructedLines(fullReconstructedLines);
-                            if (parseResult) {
-                                this.saveParsedResult(parseResult);
+                            if (parsedResult) {
+                                this.saveParsedResult(parsedResult);
                                 correctCount++;
+                                this.showToast(`Importado usando: ${methodUsed}`);
                             } else {
-                                this.showToast(`El documento no parece ser un Modelo 303 compatible: ${file.name}`, "error");
+                                this.showToast(`No se detectó el formato oficial del Modelo 303 en: ${file.name}`, "error");
                             }
 
                         } catch (err) {
                             console.error(err);
-                            this.showToast("Error de renderizado/lectura del PDF.", "error");
+                            this.showToast("Error de renderizado o lectura del archivo PDF.", "error");
                         }
                     }
 
                     this.loading = false;
                     this.loadingStatus = '';
-                    if (correctCount > 0) {
-                        this.showToast(`Procesados con éxito: ${correctCount} declaraciones.`);
-                    }
                 },
 
-                // Algoritmo de ordenación y agrupación espacial de texto en el papel
+                // ESTRATEGIA 1: Extracción directa de la base de datos interactiva del formulario del PDF (AcroForms)
+                async parseViaAcroForms(pdf) {
+                    try {
+                        const fields = await pdf.getFieldObjects();
+                        if (!fields || Object.keys(fields).length === 0) {
+                            return null; // No contiene campos interactivos, pasamos a Estrategia 2
+                        }
+
+                        let values = {};
+                        let matchCount = 0;
+                        let rawNif = '';
+                        let rawName = '';
+                        let rawYear = '';
+                        let rawPeriod = '';
+
+                        // Analizar todos los metadatos de los campos interactivos
+                        for (const name in fields) {
+                            const fieldObj = fields[name];
+                            const val = fieldObj.value;
+                            if (val === undefined || val === null || val === '') continue;
+
+                            const cleanFieldName = name.toUpperCase();
+
+                            // Intentar extraer datos identificativos de los campos interactivos del PDF
+                            if (cleanFieldName.includes("NIF") || cleanFieldName.includes("DOC_IDENT")) {
+                                rawNif = val.trim().toUpperCase();
+                            }
+                            if (cleanFieldName.includes("RAZON") || cleanFieldName.includes("NOMBRE") || cleanFieldName.includes("SUJETO")) {
+                                if (val.trim().length > 4 && !rawName.includes(val.trim())) {
+                                    rawName = val.trim();
+                                }
+                            }
+                            if (cleanFieldName.includes("EJERCICIO") || cleanFieldName.includes("ANIO") || cleanFieldName.includes("AÑO")) {
+                                if (val.trim().match(/^20\d{2}$/)) rawYear = val.trim();
+                            }
+                            if (cleanFieldName.includes("PERIODO") || cleanFieldName.includes("TRIMESTRE")) {
+                                rawPeriod = val.trim().toUpperCase();
+                            }
+
+                            // Extraer importes de casillas. AEAT nombra internamente sus campos como "C01", "C03", "C110" etc.
+                            const boxMatch = name.match(/C0*([0-9]+)/i);
+                            if (boxMatch) {
+                                const boxNum = boxMatch[1].padStart(2, '0'); // Normalizar ej: "3" -> "03"
+                                const matchedTarget = this.mappedBoxes303.find(b => b.box303 === boxNum);
+                                if (matchedTarget) {
+                                    let cleanedVal = typeof val === 'string' ? val.replace(/\./g, '').replace(',', '.') : val;
+                                    values[matchedTarget.box303] = parseFloat(cleanedVal) || 0;
+                                    matchCount++;
+                                }
+                            }
+                        }
+
+                        if (matchCount > 0) {
+                            // Si faltan NIF, Nombre o año fiscales, hacemos un escaneo de texto de fallback solo para esos datos de cabecera
+                            if (!rawNif || !rawYear) {
+                                let fallbackLines = [];
+                                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                                    const page = await pdf.getPage(pageNum);
+                                    const pageLines = await this.extractTextLinesByCoordinates(page);
+                                    fallbackLines = fallbackLines.concat(pageLines);
+                                }
+                                const fallbackText = fallbackLines.join(" ");
+                                
+                                if (!rawNif) {
+                                    const nifMatch = fallbackText.match(/\b([A-HJ-NP-S-W]\d{7}[A-Z\d]|\d{8}[A-Z])\b/i);
+                                    rawNif = nifMatch ? nifMatch[1].toUpperCase() : 'NIF_DESCONOCIDO';
+                                }
+                                if (!rawYear) {
+                                    const yearMatch = fallbackText.match(/\b(202\d)\b/);
+                                    rawYear = yearMatch ? yearMatch[1] : new Date().getFullYear().toString();
+                                }
+                                if (rawName === 'Empresa Importada' || !rawName) {
+                                    const nameMatch = fallbackText.match(/(?:Razón social|Apellidos y nombre)\s*[:]?\s*([^0-9]{8,60})/i);
+                                    rawName = nameMatch ? nameMatch[1].replace(/Sujeto pasivo|Declarante/gi, '').trim() : 'Empresa Importada';
+                                }
+                            }
+
+                            // Normalizar formato de período trimestral si viene como 1, 2, 3, 4 o mensual
+                            let normalizedPeriod = '1T';
+                            let rawPStr = rawPeriod.replace(/[\s-]/g, '');
+                            if (['01','02','03','1','1T'].includes(rawPStr)) normalizedPeriod = '1T';
+                            else if (['04','05','06','2','2T'].includes(rawPStr)) normalizedPeriod = '2T';
+                            else if (['07','08','09','3','3T'].includes(rawPStr)) normalizedPeriod = '3T';
+                            else if (['10','11','12','4','4T'].includes(rawPStr)) normalizedPeriod = '4T';
+
+                            return {
+                                nif: rawNif || 'NIF_DESCONOCIDO',
+                                name: rawName || 'Empresa Importada',
+                                year: rawYear || new Date().getFullYear().toString(),
+                                period: normalizedPeriod,
+                                values: values
+                            };
+                        }
+                    } catch (e) {
+                        console.warn("No se pudo leer vía AcroForms. Pasando a reconstrucción espacial.", e);
+                    }
+                    return null;
+                },
+
+                // ESTRATEGIA 2: Reconstrucción de líneas por coordenadas
                 async extractTextLinesByCoordinates(page) {
                     const textContent = await page.getTextContent();
                     const items = textContent.items;
                     if (!items || items.length === 0) return [];
 
-                    // Umbral vertical (en puntos) para agrupar palabras en una misma línea
                     const thresholdY = 5;
 
-                    // Ordenar por coordenada Y descendente (de arriba a abajo) y luego por coordenada X ascendente (de izquierda a derecha)
-                    // transform[5] representa la coordenada Y, transform[4] representa la coordenada X
                     items.sort((a, b) => {
                         const yA = a.transform[5];
                         const yB = b.transform[5];
@@ -703,7 +804,6 @@
                         return a.transform[4] - b.transform[4];
                     });
 
-                    // Agrupar visualmente
                     const lines = [];
                     let currentLineItems = [];
                     let lastY = items[0].transform[5];
@@ -711,7 +811,6 @@
                     items.forEach(item => {
                         const currentY = item.transform[5];
                         if (Math.abs(currentY - lastY) > thresholdY) {
-                            // Guardar la línea anterior uniendo los textos con un espacio
                             lines.push(currentLineItems.join(" "));
                             currentLineItems = [];
                             lastY = currentY;
@@ -726,7 +825,7 @@
                     return lines;
                 },
 
-                // Extracción analítica de las líneas visuales reconstruidas
+                // Extracción analítica segura con filtros de exclusión
                 parseReconstructedLines(lines) {
                     const fullTextUnified = lines.join(" ");
                     
@@ -743,7 +842,6 @@
                     let name = 'Empresa Importada';
                     for (let line of lines) {
                         if (line.includes("Apellidos y nombre o razón social") || line.includes("Sujeto pasivo")) {
-                            // Limpiar etiquetas de la AEAT para dejar solo el nombre real
                             let cleanedLine = line.replace(/Sujeto pasivo|Apellidos y nombre o razón social|[:]/gi, '').trim();
                             if (cleanedLine.length > 5) {
                                 name = cleanedLine;
@@ -776,18 +874,25 @@
                         }
                     }
 
-                    // 5. Extracción de casillas
+                    // 5. Extracción segura con descarte de datos no fiscales (Fechas, Páginas)
                     const values = {};
                     this.mappedBoxes303.forEach(target => {
                         let finalVal = 0;
                         const boxNum = target.box303;
                         
-                        // Generar patrón robusto: la casilla exacta seguida opcionalmente de puntos y un número con decimales
-                        // Ej: "01  12.500,00" o "110..... 450,23" o "[46] -230,00"
-                        const escapedBox = boxNum.replace(/^0+/, ''); // Para contemplar casillas escritas sin cero inicial
+                        const escapedBox = boxNum.replace(/^0+/, ''); 
                         const regex = new RegExp(`\\b(?:0?${escapedBox}|\\[0?${escapedBox}\\])\\b[\\s.]*(-?[\\d.]+,\\d{2})`);
 
                         for (let line of lines) {
+                            // FILTRO INTELIGENTE: Descartar si la línea tiene formato de fecha o número de página para evitar falsos positivos
+                            const lowerLine = line.toLowerCase();
+                            if (lowerLine.match(/\d{2}\/\d{2}\/\d{4}/) && !lowerLine.includes("devengado") && !lowerLine.includes("deducible")) {
+                                continue; // Salta líneas que sean fechas de presentación
+                            }
+                            if (lowerLine.includes("página") && (boxNum === '10' || boxNum === '12')) {
+                                continue; // Salta números de página para evitar confusión con casillas 10 u 12
+                            }
+
                             const match = line.match(regex);
                             if (match && match[1]) {
                                 let cleanedNum = match[1].replace(/\./g, '').replace(',', '.');
