@@ -510,30 +510,34 @@
 
                         </div>
 
-                        <!-- TAB 2: RESUMEN ANUAL 390 (CON COMPUTADOR DE BASES INTEGRADO) -->
+                        <!-- TAB 2: RESUMEN ANUAL 390 (SECCIONES AGRUPADAS Y TOTALES PROPAGADOS) -->
                         <div x-show="currentTab === '390'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                             <div class="p-4 bg-slate-50 border-b border-slate-200">
                                 <h4 class="font-bold text-slate-700 text-sm">Resumen Acumulado y Preparación del Modelo 390</h4>
-                                <p class="text-xs text-slate-500">Formato horizontal con Bases e Impuestos emparejados. Los campos de ajuste están debajo del resultado final de cada columna.</p>
+                                <p class="text-xs text-slate-500">Vista agrupada en secciones oficiales. Los cálculos de totales anuales propagan dinámicamente cualquier ajuste introducido en las casillas individuales superiores.</p>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse table-fixed">
                                     <thead>
-                                        <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                                        <tr class="bg-slate-200 border-b border-slate-300 text-xs font-bold text-slate-700 uppercase tracking-wider">
                                             <th class="p-3 font-semibold w-1/4">Concepto del Modelo 390</th>
-                                            <th class="p-3 text-right font-bold w-1/3 bg-slate-50/60">BASE IMPONIBLE (Consolidador)</th>
-                                            <th class="p-3 text-right font-bold w-1/3 bg-blue-50/50">CUOTA / VALOR (Consolidador)</th>
+                                            <th class="p-3 text-right font-bold w-1/3 bg-slate-100/60">BASE IMPONIBLE (Consolidador)</th>
+                                            <th class="p-3 text-right font-bold w-1/3 bg-blue-100/50">CUOTA / VALOR (Consolidador)</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 text-xs">
-                                        <template x-for="row in mapping390Horizontal" :key="row.label">
+                                        
+                                        <!-- SECCIÓN I: IVA DEVENGADO (REPERCUTIDO) -->
+                                        <tr class="bg-blue-900 text-white font-bold uppercase tracking-wider text-[10px]">
+                                            <td colspan="3" class="p-2.5 pl-4">I. IVA DEVENGADO (REPERCUTIDO)</td>
+                                        </tr>
+                                        <template x-for="row in mapping390Horizontal.filter(r => r.section === 'devengado')" :key="row.label">
                                             <tr class="hover:bg-slate-50/50 transition">
                                                 <!-- Concepto -->
                                                 <td class="p-3 align-top border-r border-slate-100">
                                                     <span class="font-bold text-slate-700" x-text="row.label"></span>
                                                     <div class="text-[10px] text-slate-400 mt-1" x-text="row.description"></div>
                                                 </td>
-                                                
                                                 <!-- Bloque Base -->
                                                 <td class="p-3 align-top bg-slate-50/20 border-r border-slate-100">
                                                     <template x-if="row.baseItem">
@@ -558,7 +562,6 @@
                                                         <div class="text-center text-slate-300 py-4 italic font-medium">No Aplica Base</div>
                                                     </template>
                                                 </td>
-
                                                 <!-- Bloque Cuota / Valor -->
                                                 <td class="p-3 align-top bg-blue-50/10">
                                                     <template x-if="row.cuotaItem">
@@ -582,6 +585,256 @@
                                                 </td>
                                             </tr>
                                         </template>
+
+                                        <!-- TOTAL DEVENGADO ANUAL PROPAGADO -->
+                                        <template x-for="row in mapping390Horizontal.filter(r => r.section === 'devengado_total')" :key="row.label">
+                                            <tr class="bg-blue-50/90 font-bold border-y-2 border-blue-300">
+                                                <td class="p-3 align-middle">
+                                                    <span class="font-bold text-blue-900 uppercase text-xs" x-text="row.label"></span>
+                                                    <div class="text-[9px] text-slate-500 mt-1" x-text="row.description"></div>
+                                                </td>
+                                                <!-- Base total acumulada propagando ajustes -->
+                                                <td class="p-3 align-top border-r border-blue-100">
+                                                    <div class="space-y-1.5">
+                                                        <div class="flex justify-between items-center bg-blue-100/50 p-1 rounded">
+                                                            <span class="font-mono text-slate-600 bg-white px-1 rounded font-bold" x-text="'['+row.baseItem.box390+']'"></span>
+                                                            <span class="font-mono text-slate-900 font-bold" x-text="'Suma: ' + formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, row.baseItem))"></span>
+                                                        </div>
+                                                        <div class="flex justify-between items-center pt-1 border-t border-blue-200">
+                                                            <span class="text-[10px] text-slate-500">Base Final Propagada:</span>
+                                                            <span class="font-mono font-extrabold text-sm text-slate-900" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.baseItem))"></span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <!-- Cuota total acumulada propagando ajustes -->
+                                                <td class="p-3 align-top">
+                                                    <div class="space-y-1.5">
+                                                        <div class="flex justify-between items-center bg-blue-100/50 p-1 rounded">
+                                                            <span class="font-mono text-blue-800 bg-white px-1 rounded font-bold" x-text="'['+row.cuotaItem.box390+']'"></span>
+                                                            <span class="font-mono text-blue-950 font-bold" x-text="'Suma: ' + formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                        </div>
+                                                        <div class="flex justify-between items-center pt-1 border-t border-blue-200">
+                                                            <span class="text-[10px] text-slate-500">Cuota Final Propagada:</span>
+                                                            <span class="font-mono font-extrabold text-sm text-blue-900" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </template>
+
+                                        <!-- SECCIÓN II: IVA DEDUCIBLE (SOPORTADO) -->
+                                        <tr class="bg-emerald-900 text-white font-bold uppercase tracking-wider text-[10px] border-t-2 border-slate-300">
+                                            <td colspan="3" class="p-2.5 pl-4">II. IVA DEDUCIBLE (SOPORTADO)</td>
+                                        </tr>
+                                        <template x-for="row in mapping390Horizontal.filter(r => r.section === 'deducible')" :key="row.label">
+                                            <tr class="hover:bg-slate-50/50 transition">
+                                                <!-- Concepto -->
+                                                <td class="p-3 align-top border-r border-slate-100">
+                                                    <span class="font-bold text-slate-700" x-text="row.label"></span>
+                                                    <div class="text-[10px] text-slate-400 mt-1" x-text="row.description"></div>
+                                                </td>
+                                                <!-- Bloque Base -->
+                                                <td class="p-3 align-top bg-slate-50/20 border-r border-slate-100">
+                                                    <template x-if="row.baseItem">
+                                                        <div class="space-y-1.5">
+                                                            <div class="flex justify-between items-center bg-slate-100/50 p-1 rounded">
+                                                                <span class="font-mono text-slate-600 bg-slate-100 px-1 rounded font-bold" x-text="'['+row.baseItem.box390+']'"></span>
+                                                                <span class="font-mono text-slate-900 font-bold" x-text="'Suma: ' + formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, row.baseItem))"></span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center pt-1 border-t border-slate-100">
+                                                                <span class="text-[10px] text-slate-400">Total Base:</span>
+                                                                <span class="font-mono font-bold text-xs" :class="hasOverride(selectedCompany, selectedYear, row.baseItem.box390) ? 'text-amber-700' : 'text-slate-800'" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.baseItem))"></span>
+                                                            </div>
+                                                            <div class="pt-1.5 flex justify-end">
+                                                                <input type="text" placeholder="Ajuste de Base"
+                                                                       :value="getOverrideValueFormatted(selectedCompany, selectedYear, row.baseItem.box390)"
+                                                                       @blur="updateOverrideValueFormatted(selectedCompany, selectedYear, row.baseItem.box390, $event.target.value)"
+                                                                       class="w-full text-right p-1 text-[10px] border border-slate-200 rounded font-mono bg-amber-50/10 focus:bg-white focus:border-amber-500 outline-none placeholder:text-slate-300" title="Ajuste manual de Base">
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="!row.baseItem">
+                                                        <div class="text-center text-slate-300 py-4 italic font-medium">No Aplica Base</div>
+                                                    </template>
+                                                </td>
+                                                <!-- Bloque Cuota / Valor -->
+                                                <td class="p-3 align-top bg-emerald-50/10">
+                                                    <template x-if="row.cuotaItem">
+                                                        <div class="space-y-1.5">
+                                                            <div class="flex justify-between items-center bg-emerald-100/50 p-1 rounded">
+                                                                <span class="font-mono text-emerald-800 bg-emerald-100 px-1 rounded font-bold" x-text="'['+row.cuotaItem.box390+']'"></span>
+                                                                <span class="font-mono text-emerald-950 font-bold" x-text="'Suma: ' + formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center pt-1 border-t border-slate-100">
+                                                                <span class="text-[10px] text-slate-400">Total Cuota:</span>
+                                                                <span class="font-mono font-bold text-xs" :class="hasOverride(selectedCompany, selectedYear, row.cuotaItem.box390) ? 'text-amber-700' : 'text-emerald-900'" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                            </div>
+                                                            <div class="pt-1.5 flex justify-end">
+                                                                <input type="text" placeholder="Ajuste de Cuota"
+                                                                       :value="getOverrideValueFormatted(selectedCompany, selectedYear, row.cuotaItem.box390)"
+                                                                       @blur="updateOverrideValueFormatted(selectedCompany, selectedYear, row.cuotaItem.box390, $event.target.value)"
+                                                                       class="w-full text-right p-1 text-[10px] border border-slate-200 rounded font-mono bg-amber-50/10 focus:bg-white focus:border-amber-500 outline-none placeholder:text-slate-300" title="Ajuste manual de Cuota">
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="!row.cuotaItem">
+                                                        <div class="text-center text-slate-300 py-4 italic font-medium">No Aplica Cuota</div>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
+
+                                        <!-- TOTAL DEDUCIBLE ANUAL PROPAGADO -->
+                                        <template x-for="row in mapping390Horizontal.filter(r => r.section === 'deducible_total')" :key="row.label">
+                                            <tr class="bg-emerald-50/90 font-bold border-y-2 border-emerald-300">
+                                                <td class="p-3 align-middle">
+                                                    <span class="font-bold text-emerald-950 uppercase text-xs" x-text="row.label"></span>
+                                                    <div class="text-[9px] text-slate-500 mt-1" x-text="row.description"></div>
+                                                </td>
+                                                <!-- Base total acumulada deducible -->
+                                                <td class="p-3 align-top border-r border-emerald-100">
+                                                    <div class="space-y-1.5">
+                                                        <div class="flex justify-between items-center bg-emerald-100/50 p-1 rounded">
+                                                            <span class="font-mono text-slate-600 bg-white px-1 rounded font-bold" x-text="'['+row.baseItem.box390+']'"></span>
+                                                            <span class="font-mono text-slate-900 font-bold" x-text="'Suma: ' + formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, row.baseItem))"></span>
+                                                        </div>
+                                                        <div class="flex justify-between items-center pt-1 border-t border-emerald-200">
+                                                            <span class="text-[10px] text-slate-500">Base Final Propagada:</span>
+                                                            <span class="font-mono font-extrabold text-sm text-slate-900" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.baseItem))"></span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <!-- Cuota total acumulada deducible -->
+                                                <td class="p-3 align-top">
+                                                    <div class="space-y-1.5">
+                                                        <div class="flex justify-between items-center bg-emerald-100/50 p-1 rounded">
+                                                            <span class="font-mono text-emerald-800 bg-white px-1 rounded font-bold" x-text="'['+row.cuotaItem.box390+']'"></span>
+                                                            <span class="font-mono text-emerald-950 font-bold" x-text="'Suma: ' + formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                        </div>
+                                                        <div class="flex justify-between items-center pt-1 border-t border-emerald-200">
+                                                            <span class="text-[10px] text-slate-500">Cuota Final Propagada:</span>
+                                                            <span class="font-mono font-extrabold text-sm text-emerald-900" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </template>
+
+                                        <!-- SECCIÓN III: INFORMACIÓN ADICIONAL -->
+                                        <tr class="bg-purple-950 text-white font-bold uppercase tracking-wider text-[10px] border-t-2 border-slate-300">
+                                            <td colspan="3" class="p-2.5 pl-4">III. INFORMACIÓN ADICIONAL (DATOS ANUALES)</td>
+                                        </tr>
+                                        <template x-for="row in mapping390Horizontal.filter(r => r.section === 'adicional')" :key="row.label">
+                                            <tr class="hover:bg-slate-50/50 transition">
+                                                <!-- Concepto -->
+                                                <td class="p-3 align-top border-r border-slate-100">
+                                                    <span class="font-bold text-slate-700" x-text="row.label"></span>
+                                                    <div class="text-[10px] text-slate-400 mt-1" x-text="row.description"></div>
+                                                </td>
+                                                <!-- Bloque Base -->
+                                                <td class="p-3 align-top bg-slate-50/20 border-r border-slate-100">
+                                                    <template x-if="row.baseItem">
+                                                        <div class="space-y-1.5">
+                                                            <div class="flex justify-between items-center bg-slate-100/50 p-1 rounded">
+                                                                <span class="font-mono text-slate-600 bg-slate-100 px-1 rounded font-bold" x-text="'['+row.baseItem.box390+']'"></span>
+                                                                <span class="font-mono text-slate-900 font-bold" x-text="'Suma: ' + formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, row.baseItem))"></span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center pt-1 border-t border-slate-100">
+                                                                <span class="text-[10px] text-slate-400">Total Base:</span>
+                                                                <span class="font-mono font-bold text-xs" :class="hasOverride(selectedCompany, selectedYear, row.baseItem.box390) ? 'text-amber-700' : 'text-slate-800'" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.baseItem))"></span>
+                                                            </div>
+                                                            <div class="pt-1.5 flex justify-end">
+                                                                <input type="text" placeholder="Ajuste de Base"
+                                                                       :value="getOverrideValueFormatted(selectedCompany, selectedYear, row.baseItem.box390)"
+                                                                       @blur="updateOverrideValueFormatted(selectedCompany, selectedYear, row.baseItem.box390, $event.target.value)"
+                                                                       class="w-full text-right p-1 text-[10px] border border-slate-200 rounded font-mono bg-amber-50/10 focus:bg-white focus:border-amber-500 outline-none placeholder:text-slate-300" title="Ajuste manual de Base">
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </td>
+                                                <!-- Bloque Cuota / Valor -->
+                                                <td class="p-3 align-top bg-purple-50/10">
+                                                    <template x-if="row.cuotaItem">
+                                                        <div class="space-y-1.5">
+                                                            <div class="flex justify-between items-center bg-purple-100/50 p-1 rounded">
+                                                                <span class="font-mono text-purple-800 bg-purple-100 px-1 rounded font-bold" x-text="'['+row.cuotaItem.box390+']'"></span>
+                                                                <span class="font-mono text-purple-950 font-bold" x-text="'Suma: ' + formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center pt-1 border-t border-slate-100">
+                                                                <span class="text-[10px] text-slate-400">Total Cuota:</span>
+                                                                <span class="font-mono font-bold text-xs" :class="hasOverride(selectedCompany, selectedYear, row.cuotaItem.box390) ? 'text-amber-700 font-bold' : 'text-purple-900 font-bold'" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                            </div>
+                                                            <div class="pt-1.5 flex justify-end">
+                                                                <input type="text" placeholder="Ajuste de Cuota"
+                                                                       :value="getOverrideValueFormatted(selectedCompany, selectedYear, row.cuotaItem.box390)"
+                                                                       @blur="updateOverrideValueFormatted(selectedCompany, selectedYear, row.cuotaItem.box390, $event.target.value)"
+                                                                       class="w-full text-right p-1 text-[10px] border border-slate-200 rounded font-mono bg-amber-50/10 focus:bg-white focus:border-amber-500 outline-none placeholder:text-slate-300" title="Ajuste manual de Cuota">
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="!row.cuotaItem">
+                                                        <div class="text-center text-slate-300 py-4 italic font-medium">No Aplica Cuota</div>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
+
+                                        <!-- SECCIÓN IV: LIQUIDACIONES ANUALES -->
+                                        <tr class="bg-slate-800 text-white font-bold uppercase tracking-wider text-[10px] border-t-2 border-slate-300">
+                                            <td colspan="3" class="p-2.5 pl-4">IV. RESULTADO DE LAS LIQUIDACIONES ANUALES</td>
+                                        </tr>
+                                        <template x-for="row in mapping390Horizontal.filter(r => r.section === 'liquidaciones')" :key="row.label">
+                                            <tr class="hover:bg-slate-50/50 transition">
+                                                <!-- Concepto -->
+                                                <td class="p-3 align-top border-r border-slate-100">
+                                                    <span class="font-bold text-slate-700" x-text="row.label"></span>
+                                                    <div class="text-[10px] text-slate-400 mt-1" x-text="row.description"></div>
+                                                </td>
+                                                <!-- Bloque Base -->
+                                                <td class="p-3 align-top bg-slate-50/20 border-r border-slate-100">
+                                                    <template x-if="row.baseItem">
+                                                        <div class="space-y-1.5">
+                                                            <div class="flex justify-between items-center bg-slate-100/50 p-1 rounded">
+                                                                <span class="font-mono text-slate-600 bg-slate-100 px-1 rounded font-bold" x-text="'['+row.baseItem.box390+']'"></span>
+                                                                <span class="font-mono text-slate-900 font-bold" x-text="'Suma: ' + formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, row.baseItem))"></span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center pt-1 border-t border-slate-100">
+                                                                <span class="text-[10px] text-slate-400">Total Base:</span>
+                                                                <span class="font-mono font-bold text-xs" :class="hasOverride(selectedCompany, selectedYear, row.baseItem.box390) ? 'text-amber-700' : 'text-slate-800'" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.baseItem))"></span>
+                                                            </div>
+                                                            <div class="pt-1.5 flex justify-end">
+                                                                <input type="text" placeholder="Ajuste de Base"
+                                                                       :value="getOverrideValueFormatted(selectedCompany, selectedYear, row.baseItem.box390)"
+                                                                       @blur="updateOverrideValueFormatted(selectedCompany, selectedYear, row.baseItem.box390, $event.target.value)"
+                                                                       class="w-full text-right p-1 text-[10px] border border-slate-200 rounded font-mono bg-amber-50/10 focus:bg-white focus:border-amber-500 outline-none placeholder:text-slate-300" title="Ajuste manual de Base">
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </td>
+                                                <!-- Bloque Cuota / Valor -->
+                                                <td class="p-3 align-top bg-slate-100/10">
+                                                    <template x-if="row.cuotaItem">
+                                                        <div class="space-y-1.5">
+                                                            <div class="flex justify-between items-center bg-slate-200/50 p-1 rounded">
+                                                                <span class="font-mono text-slate-800 bg-slate-200 px-1 rounded font-bold" x-text="'['+row.cuotaItem.box390+']'"></span>
+                                                                <span class="font-mono text-slate-950 font-bold" x-text="'Suma: ' + formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center pt-1 border-t border-slate-100">
+                                                                <span class="text-[10px] text-slate-400">Total Cuota:</span>
+                                                                <span class="font-mono font-bold text-xs" :class="hasOverride(selectedCompany, selectedYear, row.cuotaItem.box390) ? 'text-amber-700 font-bold' : 'text-slate-800'" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                            </div>
+                                                            <div class="pt-1.5 flex justify-end">
+                                                                <input type="text" placeholder="Ajuste de Cuota"
+                                                                       :value="getOverrideValueFormatted(selectedCompany, selectedYear, row.cuotaItem.box390)"
+                                                                       @blur="updateOverrideValueFormatted(selectedCompany, selectedYear, row.cuotaItem.box390, $event.target.value)"
+                                                                       class="w-full text-right p-1 text-[10px] border border-slate-200 rounded font-mono bg-amber-50/10 focus:bg-white focus:border-amber-500 outline-none placeholder:text-slate-300" title="Ajuste manual de Cuota">
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
+
                                     </tbody>
                                 </table>
                             </div>
@@ -632,116 +885,142 @@
         ];
 
         const MAPPING_390_HORIZONTAL = [
+            // SECCIÓN 1: IVA DEVENGADO
             { 
+                section: 'devengado',
                 label: 'Operaciones Régimen General al 4%', 
                 description: 'Sumas de bases [01] y cuotas [03] del Modelo 303',
                 baseItem: { box390: '01', sources: ['01'] }, 
                 cuotaItem: { box390: '02', sources: ['03'] } 
             },
             { 
+                section: 'devengado',
                 label: 'Operaciones Régimen General al 10%', 
                 description: 'Sumas de bases [04] y cuotas [06] del Modelo 303',
                 baseItem: { box390: '03', sources: ['04'] }, 
                 cuotaItem: { box390: '04', sources: ['06'] } 
             },
             { 
+                section: 'devengado',
                 label: 'Operaciones Régimen General al 21%', 
                 description: 'Sumas de bases [07] y cuotas [09] del Modelo 303',
                 baseItem: { box390: '05', sources: ['07'] }, 
                 cuotaItem: { box390: '06', sources: ['09'] } 
             },
             { 
+                section: 'devengado',
                 label: 'Adquisiciones Intracomunitarias', 
                 description: 'Sumas de bases [10] y cuotas [11] del Modelo 303',
                 baseItem: { box390: '21', sources: ['10'] }, 
                 cuotaItem: { box390: '22', sources: ['11'] } 
             },
             { 
+                section: 'devengado',
                 label: 'Inversión del Sujeto Pasivo', 
                 description: 'Sumas de bases [12] y cuotas [13] del Modelo 303',
                 baseItem: { box390: '27', sources: ['12'] }, 
                 cuotaItem: { box390: '28', sources: ['13'] } 
             },
             { 
-                label: 'Total IVA Devengado Anual', 
-                description: 'Suma de todas las cuotas de IVA repercutido [27] y sus correspondientes bases acumuladas',
-                baseItem: { box390: 'Bases Dev.', sources: ['01', '04', '07', '10', '12', '14', '59', '60', '120', '122', '124'] }, 
-                cuotaItem: { box390: '64', sources: ['27'] } 
+                section: 'devengado_total',
+                label: 'TOTAL IVA DEVENGADO ANUAL', 
+                description: 'Suma acumulada de todas las bases (incluyendo adicionales) y cuotas de IVA repercutido. Se recalcula dinámicamente al editar ajustes individuales.',
+                baseItem: { box390: 'Bases Dev.', isGroupTotal: true, subItems: ['01', '03', '05', '21', '27', 'Base [59]', 'Base [60]', 'Base [120]', 'Base [122]', 'Base [124]'] }, 
+                cuotaItem: { box390: '64', isGroupTotal: true, subItems: ['02', '04', '06', '22', '28'] } 
             },
+
+            // SECCIÓN 2: IVA DEDUCIBLE
             { 
+                section: 'deducible',
                 label: 'Op. Interiores Corrientes Deducibles', 
                 description: 'Suma de bases [28] y cuotas [29] del Modelo 303',
                 baseItem: { box390: '190', sources: ['28'] }, 
                 cuotaItem: { box390: '191', sources: ['29'] } 
             },
             { 
+                section: 'deducible',
                 label: 'Bases fras. recibidas al 0%', 
                 description: 'Suma acumulada de bases de facturas recibidas al 0% declaradas manualmente',
                 baseItem: { box390: '230', sources: ['base_0percent'] }, 
                 cuotaItem: null 
             },
             { 
+                section: 'deducible',
                 label: 'Op. Interiores de Bienes Inversión Deducibles', 
                 description: 'Suma de bases [30] y cuotas [31] del Modelo 303',
                 baseItem: { box390: '192', sources: ['30'] }, 
                 cuotaItem: { box390: '193', sources: ['31'] } 
             },
             { 
+                section: 'deducible',
                 label: 'Adquisiciones Intracomunitarias Corrientes Deducibles', 
                 description: 'Suma de bases [36] y cuotas [37] del Modelo 303',
                 baseItem: { box390: '198', sources: ['36'] }, 
                 cuotaItem: { box390: '199', sources: ['37'] } 
             },
             { 
+                section: 'deducible',
                 label: 'Rectificación de Deducciones (Soportado)', 
                 description: 'Suma acumulada de bases [40] y cuotas [41] de rectificación de deducciones del Modelo 303',
                 baseItem: { box390: '653', sources: ['40'] }, 
                 cuotaItem: { box390: '654', sources: ['41'] } 
             },
             { 
-                label: 'Total IVA Deducible Anual', 
-                description: 'Suma de todas las cuotas de IVA soportado [45] y sus correspondientes bases acumuladas',
-                baseItem: { box390: 'Bases Ded.', sources: ['28', '30', '36', '40', 'base_0percent'] }, 
-                cuotaItem: { box390: '232', sources: ['45'] } 
+                section: 'deducible_total',
+                label: 'TOTAL IVA DEDUCIBLE ANUAL', 
+                description: 'Suma acumulada de todas las bases y cuotas de IVA soportado. Se recalcula dinámicamente al editar ajustes individuales.',
+                baseItem: { box390: 'Bases Ded.', isGroupTotal: true, subItems: ['190', '230', '192', '198', '653'] }, 
+                cuotaItem: { box390: '232', isGroupTotal: true, subItems: ['191', '193', '199', '654'] } 
             },
+
+            // SECCIÓN 3: INFORMACIÓN ADICIONAL
             { 
+                section: 'adicional',
                 label: 'Entregas Intracomunitarias de bienes exentas', 
                 description: 'Suma de la casilla [59] de los 4 trimestres',
                 baseItem: { box390: 'Base [59]', sources: ['59'] }, 
                 cuotaItem: { box390: '103', sources: ['59'] } 
             },
             { 
+                section: 'adicional',
                 label: 'Exportaciones y Operaciones Asimiladas', 
                 description: 'Suma de la casilla [60] de los 4 trimestres',
                 baseItem: { box390: 'Base [60]', sources: ['60'] }, 
                 cuotaItem: { box390: '104', sources: ['60'] } 
             },
             { 
+                section: 'adicional',
                 label: 'Op. no sujetas o acogidas a regímenes especiales', 
                 description: 'Suma de la casilla [120] de los 4 trimestres',
                 baseItem: { box390: 'Base [120]', sources: ['120'] }, 
                 cuotaItem: { box390: '110', sources: ['120'] } 
             },
             { 
+                section: 'adicional',
                 label: 'Op. sujetas con inversión de sujeto pasivo', 
                 description: 'Suma de la casilla [122] de los 4 trimestres',
                 baseItem: { box390: 'Base [122]', sources: ['122'] }, 
                 cuotaItem: { box390: '112', sources: ['122'] } 
             },
             { 
+                section: 'adicional',
                 label: 'Op. no sujetas por localización con derecho a deducción', 
                 description: 'Suma de la casilla [124] de los 4 trimestres',
                 baseItem: { box390: 'Base [124]', sources: ['124'] }, 
                 cuotaItem: { box390: '114', sources: ['124'] } 
             },
+
+            // SECCIÓN 4: LIQUIDACIONES ANUALES
             { 
-                label: 'Cuotas a compensar acumuladas', 
+                section: 'liquidaciones',
+                label: 'Cuotas a compensar de períodos anteriores', 
                 description: 'Suma de la casilla [110] de los 4 trimestres',
                 baseItem: { box390: 'Suma [110]', sources: ['110'] }, 
                 cuotaItem: { box390: '84', sources: ['110'] } 
             },
             { 
-                label: 'Resultado de Liquidaciones Final', 
+                section: 'liquidaciones',
+                label: 'Resultado de las Liquidaciones Final', 
                 description: 'Suma de la casilla de resultado de liquidación [46]',
                 baseItem: { box390: 'Suma [46]', sources: ['46'] }, 
                 cuotaItem: { box390: '658', sources: ['46'] } 
@@ -1293,6 +1572,20 @@
 
                 calculateSum390(nif, year, item) {
                     if (!item) return 0;
+                    
+                    // Si el ítem es un acumulador anual del 390
+                    if (item.isGroupTotal) {
+                        let sum = 0;
+                        item.subItems.forEach(subBox390 => {
+                            const targetSub = this.find390ItemByBox(subBox390);
+                            if (targetSub) {
+                                sum += this.calculateSum390(nif, year, targetSub);
+                            }
+                        });
+                        return Math.round(sum * 100) / 100;
+                    }
+
+                    if (!item.sources) return 0;
                     let total = 0;
                     const periods = ['1T', '2T', '3T', '4T'];
                     
@@ -1378,6 +1671,18 @@
                     return null;
                 },
 
+                find390ItemByBox(box390) {
+                    for (const row of this.mapping390Horizontal) {
+                        if (row.baseItem && row.baseItem.box390 === box390) {
+                            return row.baseItem;
+                        }
+                        if (row.cuotaItem && row.cuotaItem.box390 === box390) {
+                            return row.cuotaItem;
+                        }
+                    }
+                    return null;
+                },
+
                 getOverrideValue(nif, year, box390) {
                     const key = `${nif}_${year}_${box390}`;
                     return this.overrides[key] !== undefined ? this.overrides[key] : '';
@@ -1410,6 +1715,26 @@
 
                 getFinal390Value(nif, year, item) {
                     if (!item) return 0;
+                    
+                    // Si el ítem es un acumulador calculado dinámicamente en el 390
+                    if (item.isGroupTotal) {
+                        // Si el propio totalizador tiene un ajuste manual directo
+                        if (this.hasOverride(nif, year, item.box390)) {
+                            return this.overrides[`${nif}_${year}_${item.box390}`];
+                        }
+                        
+                        // Suma dinámica de los sub-ítems, respetando los ajustes aplicados a los mismos
+                        let sum = 0;
+                        item.subItems.forEach(subBox390 => {
+                            const targetSub = this.find390ItemByBox(subBox390);
+                            if (targetSub) {
+                                sum += this.getFinal390Value(nif, year, targetSub);
+                            }
+                        });
+                        return Math.round(sum * 100) / 100;
+                    }
+
+                    // Caso normal (ítem individual o con origen en el 303)
                     if (this.hasOverride(nif, year, item.box390)) {
                         return this.overrides[`${nif}_${year}_${item.box390}`];
                     }
@@ -1442,11 +1767,11 @@
 
                         this.mapping390Horizontal.forEach(row => {
                             if (row.baseItem) {
-                                const key = `${this.selectedCompany}_${this.selectedYear}_row.baseItem.box390`;
+                                const key = `${this.selectedCompany}_${this.selectedYear}_${row.baseItem.box390}`;
                                 delete this.overrides[key];
                             }
                             if (row.cuotaItem) {
-                                const key = `${this.selectedCompany}_${this.selectedYear}_row.cuotaItem.box390`;
+                                const key = `${this.selectedCompany}_${this.selectedYear}_${row.cuotaItem.box390}`;
                                 delete this.overrides[key];
                             }
                         });
