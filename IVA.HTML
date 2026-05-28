@@ -32,7 +32,7 @@
                     Exportar Copia de Seguridad
                 </button>
                 <label class="px-3 py-1.5 bg-blue-800 hover:bg-blue-700 rounded text-xs font-medium flex items-center gap-1.5 cursor-pointer transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                     Importar Copia
                     <input type="file" accept=".json" class="hidden" @change="importData($event)">
                 </label>
@@ -60,7 +60,7 @@
                         <div class="text-center space-y-2 pointer-events-none">
                             <svg class="w-8 h-8 text-slate-400 group-hover:text-blue-500 mx-auto transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                             <p class="text-xs font-semibold text-slate-600">Suelte aquí sus PDFs</p>
-                            <p class="text-[10px] text-slate-400">Extractor de alta fidelidad con autorrepercusión</p>
+                            <p class="text-[10px] text-slate-400">Extractor híbrido interactivo</p>
                         </div>
                     </div>
 
@@ -103,7 +103,7 @@
 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4" x-show="rawTextPreview">
                     <button @click="showDebug = !showDebug" class="text-xs font-bold text-slate-500 hover:text-slate-800 flex justify-between w-full">
-                        <span>Verificador del lector</span>
+                        <span>Lector de texto</span>
                         <span x-text="showDebug ? '[-] Ocultar' : '[+] Depurar'"></span>
                     </button>
                     <div x-show="showDebug" class="mt-2">
@@ -564,6 +564,9 @@
     </main>
 
     <script>
+        // CONFIGURACIÓN OBLIGATORIA DE PDF.JS (HILO EN SEGUNDO PLANO DE MOZILLA)
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
         function app() {
             return {
                 loading: false,
@@ -684,7 +687,7 @@
                         cuotaItem: { box390: '232', sources: ['45'] } 
                     },
                     { 
-                        label: 'Entregas Intracomunitarias exentas', 
+                        label: 'Entregas Intracomunitarias de bienes exentas', 
                         description: 'Suma de la casilla [59] de los 4 trimestres',
                         baseItem: null, 
                         cuotaItem: { box390: '103', sources: ['59'] } 
@@ -839,7 +842,7 @@
                     for (let i = 0; i < files.length; i++) {
                         try {
                             const file = files[i];
-                            this.loadingStatus = `Analizando espacialmente ${file.name}...`;
+                            this.loadingStatus = `Analizando ${file.name}...`;
                             const arrayBuffer = await file.arrayBuffer();
                             
                             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -974,7 +977,6 @@
 
                 async extractTextLinesByCoordinates(page) {
                     const textContent = await page.getTextContent();
-                    // Limpieza preventiva de elementos sin coordenadas nativas del PDF
                     const items = textContent.items.filter(item => item && item.transform);
                     if (!items || items.length === 0) return [];
 
@@ -1160,7 +1162,7 @@
 
                     const record = this.records[key];
 
-                    // 1. Recalcular Total IVA Devengado [27]
+                    // 1. Recalcular Total Cuota IVA Devengado [27]
                     const c03 = parseFloat(record['03']) || 0;
                     const c06 = parseFloat(record['06']) || 0;
                     const c09 = parseFloat(record['09']) || 0;
@@ -1177,4 +1179,177 @@
                     const c37 = parseFloat(record['37']) || 0;
                     const c41 = parseFloat(record['41']) || 0;
 
-                    const totalDeducible = Math.round((c29 + c31 + c37 + c41)
+                    const totalDeducible = Math.round((c29 + c31 + c37 + c41) * 100) / 100;
+                    record['45'] = totalDeducible;
+
+                    // 3. Recalcular Resultado de la liquidación [46]
+                    const c110 = parseFloat(record['110']) || 0;
+                    const resultadoFinal = Math.round((totalDevengado - totalDeducible - c110) * 100) / 100;
+                    record['46'] = resultadoFinal;
+
+                    this.records[key] = record;
+                    this.saveLocal("records", key, record);
+                },
+
+                calculateSum390(nif, year, item) {
+                    if (!item) return 0;
+                    let total = 0;
+                    const periods = ['1T', '2T', '3T', '4T'];
+                    
+                    periods.forEach(period => {
+                        const key = `${nif}_${year}_${period}`;
+                        if (this.records[key]) {
+                            item.sources.forEach(box303 => {
+                                if (this.records[key][box303]) {
+                                    total += parseFloat(this.records[key][box303]) || 0;
+                                }
+                            });
+                        }
+                    });
+
+                    return Math.round(total * 100) / 100;
+                },
+
+                getOverrideValue(nif, year, box390) {
+                    const key = `${nif}_${year}_${box390}`;
+                    return this.overrides[key] !== undefined ? this.overrides[key] : '';
+                },
+
+                getOverrideValueFormatted(nif, year, box390) {
+                    const val = this.getOverrideValue(nif, year, box390);
+                    return val !== '' ? this.formatSpanishNumber(val) : '';
+                },
+
+                updateOverrideValueFormatted(nif, year, box390, textValue) {
+                    const num = this.parseSpanishNumber(textValue);
+                    this.updateOverrideValue(nif, year, box390, textValue === '' ? '' : num);
+                },
+
+                hasOverride(nif, year, box390) {
+                    const key = `${nif}_${year}_${box390}`;
+                    return this.overrides[key] !== undefined && this.overrides[key] !== '';
+                },
+
+                updateOverrideValue(nif, year, box390, val) {
+                    const key = `${nif}_${year}_${box390}`;
+                    if (val === '') {
+                        delete this.overrides[key];
+                        this.saveLocal("overrides", key, null);
+                    } else {
+                        this.overrides[key] = val;
+                        this.saveLocal("overrides", key, val);
+                    }
+                },
+
+                getFinal390Value(nif, year, item) {
+                    if (!item) return 0;
+                    if (this.hasOverride(nif, year, item.box390)) {
+                        return this.overrides[`${nif}_${year}_${item.box390}`];
+                    }
+                    return this.calculateSum390(nif, year, item);
+                },
+
+                formatSpanishNumber(value) {
+                    if (value === undefined || value === null || isNaN(value) || value === '') return '0,00';
+                    return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+                },
+
+                parseSpanishNumber(string) {
+                    if (!string) return 0;
+                    if (typeof string === 'number') return string;
+                    let cleaned = string.replace(/\./g, '').replace(',', '.');
+                    return parseFloat(cleaned) || 0;
+                },
+
+                formatCurrency(value) {
+                    return this.formatSpanishNumber(value) + " €";
+                },
+
+                deleteActiveYearData() {
+                    if (confirm(`¿Seguro que deseas vaciar todos los registros del año fiscal ${this.selectedYear}?`)) {
+                        const periods = ['1T', '2T', '3T', '4T'];
+                        periods.forEach(p => {
+                            const key = `${this.selectedCompany}_${this.selectedYear}_${p}`;
+                            delete this.records[key];
+                            this.saveLocal("records", key, null);
+                        });
+
+                        this.mapping390Horizontal.forEach(row => {
+                            if (row.baseItem) {
+                                const key = `${this.selectedCompany}_${this.selectedYear}_${row.baseItem.box390}`;
+                                delete this.overrides[key];
+                                this.saveLocal("overrides", key, null);
+                            }
+                            if (row.cuotaItem) {
+                                const key = `${this.selectedCompany}_${this.selectedYear}_${row.cuotaItem.box390}`;
+                                delete this.overrides[key];
+                                this.saveLocal("overrides", key, null);
+                            }
+                        });
+
+                        this.showToast("Datos borrados localmente.");
+                    }
+                },
+
+                exportData() {
+                    const dataPayload = {
+                        companies: this.companies,
+                        records: this.records,
+                        overrides: this.overrides
+                    };
+
+                    const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `Backup_IVA_${this.selectedCompany || 'General'}_${new Date().toISOString().slice(0,10)}.json`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    this.showToast("Copia de seguridad descargada correctamente.");
+                },
+
+                importData(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const parsed = JSON.parse(e.target.result);
+                            
+                            if (parsed.companies && parsed.records && parsed.overrides) {
+                                Object.assign(this.companies, parsed.companies);
+                                Object.assign(this.records, parsed.records);
+                                Object.assign(this.overrides, parsed.overrides);
+
+                                const transaction = this.db.transaction(["companies", "records", "overrides"], "readwrite");
+                                
+                                Object.keys(parsed.companies).forEach(k => transaction.objectStore("companies").put(parsed.companies[k]));
+                                Object.keys(parsed.records).forEach(k => {
+                                    transaction.objectStore("records").put(parsed.records[k], k);
+                                    const yearFromKey = k.split('_')[1];
+                                    this.registerYearIfNeeded(yearFromKey);
+                                    const parts = k.split('_');
+                                    this.recalculateTotals303(parts[0], parts[1], parts[2]);
+                                });
+                                Object.keys(parsed.overrides).forEach(k => transaction.objectStore("overrides").put(parsed.overrides[k], k));
+
+                                this.showToast("Base de datos de copia de seguridad restaurada.");
+                                if (Object.keys(this.companies).length > 0) {
+                                    this.selectedCompany = Object.keys(this.companies)[0];
+                                    this.selectedYear = new Date().getFullYear().toString();
+                                }
+                            } else {
+                                this.showToast("El archivo JSON no contiene la estructura esperada.", "error");
+                            }
+                        } catch (err) {
+                            this.showToast("No se pudo leer el archivo de copia de seguridad.", "error");
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+        }
+    </script>
+</body>
+</html>
