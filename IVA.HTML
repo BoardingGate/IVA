@@ -22,7 +22,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Motor de importación de alta precisión (Failsafe Storage)</p>
+                    <p class="text-xs text-blue-200">Consolidador con motor de precisión de corte milimétrico</p>
                 </div>
             </div>
             
@@ -143,7 +143,7 @@
                             <button @click="currentTab = '303'" :class="currentTab === '303' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'" class="py-2.5 px-4 text-sm border-b-2 font-medium transition">
                                 Entrada de Datos (Modelo 303 Oficial)
                             </button>
-                            <button @click="currentTab = '390'" :class="currentTab === '390' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'" class="py-2.5 px-4 text-sm border-b-2 font-medium transition">
+                            <button @click="currentTab === '390'" @click="currentTab = '390'" :class="currentTab === '390' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'" class="py-2.5 px-4 text-sm border-b-2 font-medium transition">
                                 Acumulados para Modelo 390
                             </button>
                         </div>
@@ -892,7 +892,7 @@
                         }
 
                         if (matchCount > 0) {
-                            if (!rawNif || !rawYear) {
+                            if (!rawNif || !rawYear || !rawName || rawName === 'Empresa Importada') {
                                 let fallbackLines = [];
                                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                                     const page = await pdf.getPage(pageNum);
@@ -909,9 +909,22 @@
                                     const yearMatch = fallbackText.match(/\b(202\d)\b/);
                                     rawYear = yearMatch ? yearMatch[1] : new Date().getFullYear().toString();
                                 }
-                                if (rawName === 'Empresa Importada' || !rawName) {
-                                    const nameMatch = fallbackText.match(/(?:Razón social|Apellidos y nombre)\s*[:]?\s*([^0-9]{8,60})/i);
-                                    rawName = nameMatch ? nameMatch[1].replace(/Sujeto pasivo|Declarante/gi, '').trim() : 'Empresa Importada';
+                                
+                                // Escáner de vecindad inteligente para extraer la razón social oficial junto al NIF
+                                if (rawNif && (!rawName || rawName === 'Empresa Importada')) {
+                                    let nifLineIdx = fallbackLines.findIndex(l => l.toUpperCase().includes(rawNif));
+                                    if (nifLineIdx !== -1) {
+                                        for (let offset = -2; offset <= 3; offset++) {
+                                            const l = fallbackLines[nifLineIdx + offset];
+                                            if (l) {
+                                                const cleanLine = l.replace(/Sujeto pasivo|Declarante|Apellidos y nombre o razón social|N\.I\.F\.|NIF|[:]/gi, '').trim();
+                                                if (cleanLine.length > 5 && !cleanLine.includes("Página") && !cleanLine.includes("Modelo") && !cleanLine.includes("303") && !cleanLine.includes(rawNif)) {
+                                                    rawName = cleanLine;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -984,13 +997,20 @@
                     const nifMatch = fullTextUnified.match(/\b([A-HJ-NP-S-W]\d{7}[A-Z\d]|\d{8}[A-Z])\b/i);
                     if (nifMatch) nif = nifMatch[1].toUpperCase();
 
+                    // Escáner de vecindad inteligente para la extracción de Razón Social
                     let name = 'Empresa Importada';
-                    for (let line of lines) {
-                        if (line.includes("Apellidos y nombre o razón social") || line.includes("Sujeto pasivo")) {
-                            let cleanedLine = line.replace(/Sujeto pasivo|Apellidos y nombre o razón social|[:]/gi, '').trim();
-                            if (cleanedLine.length > 5) {
-                                name = cleanedLine;
-                                break;
+                    if (nif) {
+                        let nifLineIdx = lines.findIndex(l => l.toUpperCase().includes(nif));
+                        if (nifLineIdx !== -1) {
+                            for (let offset = -2; offset <= 3; offset++) {
+                                const l = lines[nifLineIdx + offset];
+                                if (l) {
+                                    const cleanLine = l.replace(/Sujeto pasivo|Declarante|Apellidos y nombre o razón social|N\.I\.F\.|NIF|[:]/gi, '').trim();
+                                    if (cleanLine.length > 5 && !cleanLine.includes("Página") && !cleanLine.includes("Modelo") && !cleanLine.includes("303") && !cleanLine.includes(nif)) {
+                                        name = cleanLine;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
@@ -1025,7 +1045,6 @@
                         const boxNum = target.box303;
                         const rBox = boxNum.replace(/^0+/, ''); 
 
-                        // Regex de límites de palabras para la localización espacial de la casilla
                         const boxRegex = new RegExp(`\\b0?${rBox}\\b|\\b\\[0?${rBox}\\]\\b`);
 
                         for (let line of lines) {
@@ -1041,9 +1060,8 @@
                             
                             if (match) {
                                 const matchIndex = match.index;
-                                const matchLength = match[0].length; // Longitud exacta de corte (ej: "[07]" = 4)
+                                const matchLength = match[0].length;
 
-                                // Extraer los textos que quedan estrictamente a la derecha de la casilla localizada
                                 const remainingText = line.substring(matchIndex + matchLength).trim();
                                 const remainingTokens = remainingText.split(/\s+/);
                                 
@@ -1051,7 +1069,6 @@
                                     let firstToken = remainingTokens[0];
                                     let tokenIdx = 0;
 
-                                    // Esquivar puntos guía de la plantilla oficial de la AEAT (ej: ".... 12.300,00")
                                     if (firstToken.startsWith('.') || firstToken === '...') {
                                         firstToken = remainingTokens[1] || '';
                                         tokenIdx = 1;
@@ -1060,19 +1077,18 @@
                                     if (firstToken) {
                                         const cleanToken = firstToken.replace(/[\[\]]/g, '').replace(/^0+/, '').replace(/[^0-9]/g, '');
                                         
-                                        // CONTROL FISCAL DE INTEGRIDAD: Si la primera palabra que sigue es otra casilla, esta se considera a cero
-                                        if (targetBoxesClean.includes(cleanToken) && cleanToken !== rBox) {
+                                        // FILTRO SEGURO DE INTEGRIDAD: Si el token analizado contiene una coma decimal ",", es estrictamente un importe y NO debe considerarse casilla
+                                        const isStrictAmount = firstToken.includes(",");
+
+                                        if (!isStrictAmount && targetBoxesClean.includes(cleanToken) && cleanToken !== rBox) {
                                             break; 
                                         }
 
-                                        // Comprobar formato decimal oficial español
                                         if (/^-?[\d.]+(?:,\d{2})?$/.test(firstToken)) {
                                             let cleanedNum = firstToken.replace(/\./g, '').replace(',', '.');
                                             let numericValue = parseFloat(cleanedNum) || 0;
 
-                                            // FILTRO EXCLUSIÓN TIPO GRAVAMEN: Ignorar porcentajes tipo impositivo (4, 10 o 21) si consultamos casillas de Base General
                                             if (['1', '4', '7'].includes(rBox) && [4, 10, 21].includes(numericValue)) {
-                                                // Si el tipo impositivo está impreso, el valor real estará en el token adyacente derecho
                                                 const secondToken = remainingTokens[tokenIdx + 1];
                                                 if (secondToken && /^-?[\d.]+(?:,\d{2})?$/.test(secondToken)) {
                                                     let cleanedSec = secondToken.replace(/\./g, '').replace(',', '.');
@@ -1096,6 +1112,9 @@
                 saveParsedResult(data) {
                     if (!this.companies[data.nif]) {
                         this.companies[data.nif] = { nif: data.nif, name: data.name };
+                    } else if (data.name !== 'Empresa Importada') {
+                        // Actualizar el nombre si es que el PDF trae el nombre real oficial
+                        this.companies[data.nif].name = data.name;
                     }
 
                     const recordKey = `${data.nif}_${data.year}_${data.period}`;
