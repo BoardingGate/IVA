@@ -22,7 +22,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Consolidador con motor híbrido de precisión corregido</p>
+                    <p class="text-xs text-blue-200">Consolidador con motor de precisión de corte milimétrico</p>
                 </div>
             </div>
             
@@ -564,7 +564,145 @@
     </main>
 
     <script>
-        // CONFIGURACIÓN OBLIGATORIA DE PDF.JS (HILO EN SEGUNDO PLANO DE MOZILLA)
+        // CONSTANTES GLOBALES DE CONFIGURACIÓN FISCAL (INMUNE A CONTEXTO 'THIS')
+        const MAPPED_BOXES_303 = [
+            { box303: '01', label: 'Régimen general - Base Imponible al 4%' },
+            { box303: '03', label: 'Régimen general - Cuota al 4%' },
+            { box303: '04', label: 'Régimen general - Base Imponible al 10%' },
+            { box303: '06', label: 'Régimen general - Cuota al 10%' },
+            { box303: '07', label: 'Régimen general - Base Imponible al 21%' },
+            { box303: '09', label: 'Régimen general - Cuota al 21%' },
+            { box303: '10', label: 'Adq. Intracomunitarias - Base' },
+            { box303: '11', label: 'Adq. Intracomunitarias - Cuota' },
+            { box303: '12', label: 'Inversión del Sujeto Pasivo - Base' },
+            { box303: '13', label: 'Inversión del Sujeto Pasivo - Cuota' },
+            { box303: '14', label: 'Modificación de Bases y Cuotas - Base' },
+            { box303: '15', label: 'Modificación de Bases y Cuotas - Cuota' },
+            { box303: '27', label: 'Total Cuota de IVA Devengado' },
+            { box303: '28', label: 'Op. Interiores Corrientes - Base' },
+            { box303: '29', label: 'Op. Interiores Corrientes - Cuota' },
+            { box303: '30', label: 'Op. Interiores Bienes Inversión - Base' },
+            { box303: '31', label: 'Op. Interiores Bienes Inversión - Cuota' },
+            { box303: '36', label: 'Adq. Intracomunitarias Corrientes - Base' },
+            { box303: '37', label: 'Adq. Intracomunitarias Corrientes - Cuota' },
+            { box303: '40', label: 'Rectificación de Deducciones - Base' },
+            { box303: '41', label: 'Rectificación de Deducciones - Cuota' },
+            { box303: '45', label: 'Total IVA Deducible' },
+            { box303: '59', label: 'Entregas Intracomunitarias de Bienes/Servicios Exentas' },
+            { box303: '60', label: 'Exportaciones y Operaciones Asimiladas' },
+            { box303: '120', label: 'Op. no sujetas o acogidas a regímenes especiales' },
+            { box303: '122', label: 'Op. sujetas con inversión de sujeto pasivo' },
+            { box303: '124', label: 'Op. no sujetas por localización con derecho a deducción' },
+            { box303: '110', label: 'Cuotas a compensar de períodos anteriores' },
+            { box303: '46', label: 'Resultado de la Liquidación' }
+        ];
+
+        const MAPPING_390_HORIZONTAL = [
+            { 
+                label: 'Operaciones Régimen General al 4%', 
+                description: 'Sumas de bases [01] y cuotas [03] del Modelo 303',
+                baseItem: { box390: '01', sources: ['01'] }, 
+                cuotaItem: { box390: '02', sources: ['03'] } 
+            },
+            { 
+                label: 'Operaciones Régimen General al 10%', 
+                description: 'Sumas de bases [04] y cuotas [06] del Modelo 303',
+                baseItem: { box390: '03', sources: ['04'] }, 
+                cuotaItem: { box390: '04', sources: ['06'] } 
+            },
+            { 
+                label: 'Operaciones Régimen General al 21%', 
+                description: 'Sumas de bases [07] y cuotas [09] del Modelo 303',
+                baseItem: { box390: '05', sources: ['07'] }, 
+                cuotaItem: { box390: '06', sources: ['09'] } 
+            },
+            { 
+                label: 'Adquisiciones Intracomunitarias', 
+                description: 'Sumas de bases [10] y cuotas [11] del Modelo 303',
+                baseItem: { box390: '21', sources: ['10'] }, 
+                cuotaItem: { box390: '22', sources: ['11'] } 
+            },
+            { 
+                label: 'Inversión del Sujeto Pasivo', 
+                description: 'Sumas de bases [12] y cuotas [13] del Modelo 303',
+                baseItem: { box390: '27', sources: ['12'] }, 
+                cuotaItem: { box390: '28', sources: ['13'] } 
+            },
+            { 
+                label: 'Total IVA Devengado Anual', 
+                description: 'Suma de todas las cuotas de IVA repercutido [27]',
+                baseItem: null, 
+                cuotaItem: { box390: '64', sources: ['27'] } 
+            },
+            { 
+                label: 'Op. Interiores Corrientes Deducibles', 
+                description: 'Suma de bases [28] y cuotas [29] del Modelo 303',
+                baseItem: { box390: '190', sources: ['28'] }, 
+                cuotaItem: { box390: '191', sources: ['29'] } 
+            },
+            { 
+                label: 'Op. Interiores de Bienes Inversión Deducibles', 
+                description: 'Suma de bases [30] y cuotas [31] del Modelo 303',
+                baseItem: { box390: '192', sources: ['30'] }, 
+                cuotaItem: { box390: '193', sources: ['31'] } 
+            },
+            { 
+                label: 'Adquisiciones Intracomunitarias Corrientes Deducibles', 
+                description: 'Suma de bases [36] y cuotas [37] del Modelo 303',
+                baseItem: { box390: '198', sources: ['36'] }, 
+                cuotaItem: { box390: '199', sources: ['37'] } 
+            },
+            { 
+                label: 'Total IVA Deducible Anual', 
+                description: 'Suma de todas las cuotas de IVA soportado [45]',
+                baseItem: null, 
+                cuotaItem: { box390: '232', sources: ['45'] } 
+            },
+            { 
+                label: 'Entregas Intracomunitarias de bienes exentas', 
+                description: 'Suma de la casilla [59] de los 4 trimestres',
+                baseItem: null, 
+                cuotaItem: { box390: '103', sources: ['59'] } 
+            },
+            { 
+                label: 'Exportaciones y Operaciones Asimiladas', 
+                description: 'Suma de la casilla [60] de los 4 trimestres',
+                baseItem: null, 
+                cuotaItem: { box390: '104', sources: ['60'] } 
+            },
+            { 
+                label: 'Op. no sujetas o acogidas a regímenes especiales', 
+                description: 'Suma de la casilla [120] de los 4 trimestres',
+                baseItem: null, 
+                cuotaItem: { box390: '110', sources: ['120'] } 
+            },
+            { 
+                label: 'Op. sujetas con inversión de sujeto pasivo', 
+                description: 'Suma de la casilla [122] de los 4 trimestres',
+                baseItem: null, 
+                cuotaItem: { box390: '112', sources: ['122'] } 
+            },
+            { 
+                label: 'Op. no sujetas por localización con deducción', 
+                description: 'Suma de la casilla [124] de los 4 trimestres',
+                baseItem: null, 
+                cuotaItem: { box390: '114', sources: ['124'] } 
+            },
+            { 
+                label: 'Cuotas a compensar acumuladas', 
+                description: 'Suma de la casilla [110] de los 4 trimestres',
+                baseItem: null, 
+                cuotaItem: { box390: '84', sources: ['110'] } 
+            },
+            { 
+                label: 'Resultado de Liquidaciones Final', 
+                description: 'Suma de la casilla de resultado de liquidación [46]',
+                baseItem: null, 
+                cuotaItem: { box390: '658', sources: ['46'] } 
+            }
+        ];
+
+        // CONFIGURACIÓN OBLIGATORIA DEL HILO DE MOZILLA
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
         function app() {
@@ -582,7 +720,7 @@
                 selectedYear: '',
                 availableYears: ['2023', '2024', '2025'],
                 currentTab: '303',
-                activeQuarter: '1T', // Trimestre de trabajo por defecto
+                activeQuarter: '1T',
                 
                 toast: {
                     show: false,
@@ -592,143 +730,9 @@
 
                 db: null,
 
-                mappedBoxes303: [
-                    { box303: '01', label: 'Régimen general - Base Imponible al 4%' },
-                    { box303: '03', label: 'Régimen general - Cuota al 4%' },
-                    { box303: '04', label: 'Régimen general - Base Imponible al 10%' },
-                    { box303: '06', label: 'Régimen general - Cuota al 10%' },
-                    { box303: '07', label: 'Régimen general - Base Imponible al 21%' },
-                    { box303: '09', label: 'Régimen general - Cuota al 21%' },
-                    { box303: '10', label: 'Adq. Intracomunitarias - Base' },
-                    { box303: '11', label: 'Adq. Intracomunitarias - Cuota' },
-                    { box303: '12', label: 'Inversión del Sujeto Pasivo - Base' },
-                    { box303: '13', label: 'Inversión del Sujeto Pasivo - Cuota' },
-                    { box303: '14', label: 'Modificación de Bases y Cuotas - Base' },
-                    { box303: '15', label: 'Modificación de Bases y Cuotas - Cuota' },
-                    { box303: '27', label: 'Total Cuota de IVA Devengado' },
-                    { box303: '28', label: 'Op. Interiores Corrientes - Base' },
-                    { box303: '29', label: 'Op. Interiores Corrientes - Cuota' },
-                    { box303: '30', label: 'Op. Interiores Bienes Inversión - Base' },
-                    { box303: '31', label: 'Op. Interiores Bienes Inversión - Cuota' },
-                    { box303: '36', label: 'Adq. Intracomunitarias Corrientes - Base' },
-                    { box303: '37', label: 'Adq. Intracomunitarias Corrientes - Cuota' },
-                    { box303: '40', label: 'Rectificación de Deducciones - Base' },
-                    { box303: '41', label: 'Rectificación de Deducciones - Cuota' },
-                    { box303: '45', label: 'Total IVA Deducible' },
-                    // Casillas de información adicional añadidas
-                    { box303: '59', label: 'Entregas Intracomunitarias exentas' },
-                    { box303: '60', label: 'Exportaciones y operaciones asimiladas' },
-                    { box303: '120', label: 'Op. no sujetas o acogidas a regímenes especiales' },
-                    { box303: '122', label: 'Op. sujetas con inversión de sujeto pasivo' },
-                    { box303: '124', label: 'Op. no sujetas por localización con derecho a deducción' },
-                    { box303: '110', label: 'Cuotas a compensar de períodos anteriores' },
-                    { box303: '46', label: 'Resultado de la Liquidación' }
-                ],
-
-                mapping390Horizontal: [
-                    { 
-                        label: 'Operaciones Régimen General al 4%', 
-                        description: 'Sumas de bases [01] y cuotas [03] del Modelo 303',
-                        baseItem: { box390: '01', sources: ['01'] }, 
-                        cuotaItem: { box390: '02', sources: ['03'] } 
-                    },
-                    { 
-                        label: 'Operaciones Régimen General al 10%', 
-                        description: 'Sumas de bases [04] y cuotas [06] del Modelo 303',
-                        baseItem: { box390: '03', sources: ['04'] }, 
-                        cuotaItem: { box390: '04', sources: ['06'] } 
-                    },
-                    { 
-                        label: 'Operaciones Régimen General al 21%', 
-                        description: 'Sumas de bases [07] y cuotas [09] del Modelo 303',
-                        baseItem: { box390: '05', sources: ['07'] }, 
-                        cuotaItem: { box390: '06', sources: ['09'] } 
-                    },
-                    { 
-                        label: 'Adquisiciones Intracomunitarias', 
-                        description: 'Sumas de bases [10] y cuotas [11] del Modelo 303',
-                        baseItem: { box390: '21', sources: ['10'] }, 
-                        cuotaItem: { box390: '22', sources: ['11'] } 
-                    },
-                    { 
-                        label: 'Inversión del Sujeto Pasivo', 
-                        description: 'Sumas de bases [12] y cuotas [13] del Modelo 303',
-                        baseItem: { box390: '27', sources: ['12'] }, 
-                        cuotaItem: { box390: '28', sources: ['13'] } 
-                    },
-                    { 
-                        label: 'Total IVA Devengado Anual', 
-                        description: 'Suma de todas las cuotas de IVA repercutido [27]',
-                        baseItem: null, 
-                        cuotaItem: { box390: '64', sources: ['27'] } 
-                    },
-                    { 
-                        label: 'Op. Interiores Corrientes Deducibles', 
-                        description: 'Suma de bases [28] y cuotas [29] del Modelo 303',
-                        baseItem: { box390: '190', sources: ['28'] }, 
-                        cuotaItem: { box390: '191', sources: ['29'] } 
-                    },
-                    { 
-                        label: 'Op. Interiores de Bienes Inversión Deducibles', 
-                        description: 'Suma de bases [30] y cuotas [31] del Modelo 303',
-                        baseItem: { box390: '192', sources: ['30'] }, 
-                        cuotaItem: { box390: '193', sources: ['31'] } 
-                    },
-                    { 
-                        label: 'Adquisiciones Intracomunitarias Corrientes Deducibles', 
-                        description: 'Suma de bases [36] y cuotas [37] del Modelo 303',
-                        baseItem: { box390: '198', sources: ['36'] }, 
-                        cuotaItem: { box390: '199', sources: ['37'] } 
-                    },
-                    { 
-                        label: 'Total IVA Deducible Anual', 
-                        description: 'Suma de todas las cuotas de IVA soportado [45]',
-                        baseItem: null, 
-                        cuotaItem: { box390: '232', sources: ['45'] } 
-                    },
-                    { 
-                        label: 'Entregas Intracomunitarias de bienes exentas', 
-                        description: 'Suma de la casilla [59] de los 4 trimestres',
-                        baseItem: null, 
-                        cuotaItem: { box390: '103', sources: ['59'] } 
-                    },
-                    { 
-                        label: 'Exportaciones y Operaciones Asimiladas', 
-                        description: 'Suma de la casilla [60] de los 4 trimestres',
-                        baseItem: null, 
-                        cuotaItem: { box390: '104', sources: ['60'] } 
-                    },
-                    { 
-                        label: 'Op. no sujetas o acogidas a regímenes especiales', 
-                        description: 'Suma de la casilla [120] de los 4 trimestres',
-                        baseItem: null, 
-                        cuotaItem: { box390: '110', sources: ['120'] } 
-                    },
-                    { 
-                        label: 'Op. sujetas con inversión de sujeto pasivo', 
-                        description: 'Suma de la casilla [122] de los 4 trimestres',
-                        baseItem: null, 
-                        cuotaItem: { box390: '112', sources: ['122'] } 
-                    },
-                    { 
-                        label: 'Op. no sujetas por localización con deducción', 
-                        description: 'Suma de la casilla [124] de los 4 trimestres',
-                        baseItem: null, 
-                        cuotaItem: { box390: '114', sources: ['124'] } 
-                    },
-                    { 
-                        label: 'Cuotas a compensar acumuladas', 
-                        description: 'Suma de la casilla [110] de los 4 trimestres',
-                        baseItem: null, 
-                        cuotaItem: { box390: '84', sources: ['110'] } 
-                    },
-                    { 
-                        label: 'Resultado de Liquidaciones Final', 
-                        description: 'Suma de la casilla de resultado de liquidación [46]',
-                        baseItem: null, 
-                        cuotaItem: { box390: '658', sources: ['46'] } 
-                    }
-                ],
+                // Inyección de constantes de forma interna en Alpine
+                mappedBoxes303: MAPPED_BOXES_303,
+                mapping390Horizontal: MAPPING_390_HORIZONTAL,
 
                 async init() {
                     this.initIndexedDB();
@@ -860,7 +864,7 @@
                                 }
                                 const textReconstruction = fullReconstructedLines.join("\n");
                                 this.rawTextPreview = textReconstruction;
-                                parsedResult = this.parseReconstructedLines(fullReconstructedLines, this.mappedBoxes303);
+                                parsedResult = this.parseReconstructedLines(fullReconstructedLines, MAPPED_BOXES_303);
                             }
 
                             if (parsedResult) {
@@ -921,7 +925,7 @@
                             const boxMatch = name.match(/C0*([0-9]+)/i);
                             if (boxMatch) {
                                 const boxNum = boxMatch[1].padStart(2, '0');
-                                const matchedTarget = this.mappedBoxes303.find(b => b.box303 === boxNum);
+                                const matchedTarget = MAPPED_BOXES_303.find(b => b.box303 === boxNum);
                                 if (matchedTarget) {
                                     let cleanedVal = typeof val === 'string' ? val.replace(/\./g, '').replace(',', '.') : val;
                                     values[matchedTarget.box303] = parseFloat(cleanedVal) || 0;
@@ -975,44 +979,7 @@
                     return null;
                 },
 
-                async extractTextLinesByCoordinates(page) {
-                    const textContent = await page.getTextContent();
-                    const items = textContent.items.filter(item => item && item.transform);
-                    if (!items || items.length === 0) return [];
-
-                    const thresholdY = 5;
-
-                    items.sort((a, b) => {
-                        const yA = a.transform[5];
-                        const yB = b.transform[5];
-                        if (Math.abs(yB - yA) > thresholdY) {
-                            return yB - yA;
-                        }
-                        return a.transform[4] - b.transform[4];
-                    });
-
-                    const lines = [];
-                    let currentLineItems = [];
-                    let lastY = items[0].transform[5];
-
-                    items.forEach(item => {
-                        const currentY = item.transform[5];
-                        if (Math.abs(currentY - lastY) > thresholdY) {
-                            lines.push(currentLineItems.join(" "));
-                            currentLineItems = [];
-                            lastY = currentY;
-                        }
-                        currentLineItems.push(item.str);
-                    });
-
-                    if (currentLineItems.length > 0) {
-                        lines.push(currentLineItems.join(" "));
-                    }
-
-                    return lines;
-                },
-
-                // MOTOR DE EXTRACCIÓN MEJORADO: Búsqueda por coordenada de línea + Extracción por proximidad virtual de primera palabra
+                // ESTRATEGIA 2: Reconstrucción de líneas por coordenadas y extracción por proximidad de corte de precisión
                 parseReconstructedLines(lines, targetBoxes) {
                     const fullTextUnified = lines.join(" ");
                     
@@ -1065,7 +1032,7 @@
                         const boxNum = target.box303;
                         const escapedBox = boxNum.replace(/^0+/, ''); 
 
-                        // Buscador robusto por expresión regular de límite de palabra de la casilla
+                        // Regex de límites de palabras para la localización espacial
                         const boxRegex = new RegExp(`\\b0?${escapedBox}\\b|\\b\\[0?${escapedBox}\\]\\b`);
 
                         for (let line of lines) {
@@ -1077,11 +1044,14 @@
                                 continue; 
                             }
 
-                            const matchIndex = line.search(boxRegex);
+                            const match = line.match(boxRegex);
                             
-                            if (matchIndex !== -1) {
-                                // Obtener la porción de texto a la derecha de la casilla
-                                const remainingText = line.substring(matchIndex + escapedBox.length).trim();
+                            if (match) {
+                                const matchIndex = match.index;
+                                const matchLength = match[0].length; // Usar longitud exacta del texto coincidente real (ej: "[07]")
+
+                                // Extraer los textos que quedan estrictamente a la derecha del delimitador
+                                const remainingText = line.substring(matchIndex + matchLength).trim();
                                 const remainingTokens = remainingText.split(/\s+/);
                                 
                                 if (remainingTokens.length > 0) {
@@ -1097,7 +1067,7 @@
                                     if (firstToken) {
                                         const cleanToken = firstToken.replace(/[\[\]]/g, '').replace(/^0+/, '').replace(/[^0-9]/g, '');
                                         
-                                        // CONTROL ANTI-ERRORES: Si la primera palabra que sigue es otra casilla oficial de Hacienda, la casilla consultada está vacía
+                                        // CONTROL ANTI-ERRORES: Si el primer token siguiente es otra casilla oficial de Hacienda, la casilla consultada está vacía
                                         if (targetBoxesClean.includes(cleanToken) && cleanToken !== escapedBox) {
                                             break; 
                                         }
@@ -1128,24 +1098,6 @@
                     });
 
                     return { nif, name, year, period, values };
-                },
-
-                saveParsedResult(data) {
-                    if (!this.companies[data.nif]) {
-                        const newC = { nif: data.nif, name: data.name };
-                        this.companies[data.nif] = newC;
-                        this.saveLocal("companies", data.nif, newC);
-                    }
-
-                    const recordKey = `${data.nif}_${data.year}_${data.period}`;
-                    this.records[recordKey] = data.values;
-                    
-                    this.recalculateTotals303(data.nif, data.year, data.period);
-
-                    this.registerYearIfNeeded(data.year);
-                    
-                    this.selectedCompany = data.nif;
-                    this.selectedYear = data.year;
                 },
 
                 getBox303Value(nif, year, period, box) {
