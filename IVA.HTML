@@ -22,7 +22,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Consolidador contable con motor de coordenadas de alta tolerancia</p>
+                    <p class="text-xs text-blue-200">Consolidador con motor híbrido de precisión corregido</p>
                 </div>
             </div>
             
@@ -1012,6 +1012,7 @@
                     return lines;
                 },
 
+                // MOTOR DE EXTRACCIÓN MEJORADO: Búsqueda por coordenada de línea + Extracción por proximidad virtual de primera palabra
                 parseReconstructedLines(lines, targetBoxes) {
                     const fullTextUnified = lines.join(" ");
                     
@@ -1064,7 +1065,8 @@
                         const boxNum = target.box303;
                         const escapedBox = boxNum.replace(/^0+/, ''); 
 
-                        const regex = new RegExp(`\\b(?:0?${escapedBox}|\\[0?${escapedBox}\\])\\b[\\s.]*(-?[\\d.]+,\\d{2})`, 'g');
+                        // Buscador robusto por expresión regular de límite de palabra de la casilla
+                        const boxRegex = new RegExp(`\\b0?${escapedBox}\\b|\\b\\[0?${escapedBox}\\]\\b`);
 
                         for (let line of lines) {
                             const lowerLine = line.toLowerCase();
@@ -1075,29 +1077,47 @@
                                 continue; 
                             }
 
-                            const tokens = line.split(/\s+/);
-                            const idx = tokens.findIndex(t => t.replace(/[\[\]]/g, '').replace(/^0+/, '') === escapedBox);
+                            const matchIndex = line.search(boxRegex);
                             
-                            if (idx !== -1) {
-                                for (let offset = 1; offset <= 2; offset++) {
-                                    const nextToken = tokens[idx + offset];
-                                    if (nextToken) {
-                                        const cleanNextToken = nextToken.replace(/[\[\]]/g, '').replace(/^0+/, '');
+                            if (matchIndex !== -1) {
+                                // Obtener la porción de texto a la derecha de la casilla
+                                const remainingText = line.substring(matchIndex + escapedBox.length).trim();
+                                const remainingTokens = remainingText.split(/\s+/);
+                                
+                                if (remainingTokens.length > 0) {
+                                    let firstToken = remainingTokens[0];
+                                    let tokenIdx = 0;
+
+                                    // Esquivar puntos guía de la plantilla oficial de la AEAT (ej: ".... 12.300,00")
+                                    if (firstToken.startsWith('.') || firstToken === '...') {
+                                        firstToken = remainingTokens[1] || '';
+                                        tokenIdx = 1;
+                                    }
+
+                                    if (firstToken) {
+                                        const cleanToken = firstToken.replace(/[\[\]]/g, '').replace(/^0+/, '').replace(/[^0-9]/g, '');
                                         
-                                        if (targetBoxesClean.includes(cleanNextToken) && cleanNextToken !== escapedBox) {
+                                        // CONTROL ANTI-ERRORES: Si la primera palabra que sigue es otra casilla oficial de Hacienda, la casilla consultada está vacía
+                                        if (targetBoxesClean.includes(cleanToken) && cleanToken !== escapedBox) {
                                             break; 
                                         }
 
-                                        if (/^-?[\d.]+(?:,\d{2})?$/.test(nextToken)) {
-                                            let cleanedNum = nextToken.replace(/\./g, '').replace(',', '.');
+                                        // Comprobar formato decimal oficial español
+                                        if (/^-?[\d.]+(?:,\d{2})?$/.test(firstToken)) {
+                                            let cleanedNum = firstToken.replace(/\./g, '').replace(',', '.');
                                             let numericValue = parseFloat(cleanedNum) || 0;
 
+                                            // FILTRO EXCLUSIÓN TIPO GRAVAMEN: Ignorar porcentajes tipo impositivo (4, 10 o 21) si consultamos casillas de Base General
                                             if (['1', '4', '7'].includes(escapedBox) && [4, 10, 21].includes(numericValue)) {
-                                                continue; 
+                                                // Si el tipo impositivo está impreso, el valor real estará en el token adyacente derecho
+                                                const secondToken = remainingTokens[tokenIdx + 1];
+                                                if (secondToken && /^-?[\d.]+(?:,\d{2})?$/.test(secondToken)) {
+                                                    let cleanedSec = secondToken.replace(/\./g, '').replace(',', '.');
+                                                    finalVal = parseFloat(cleanedSec) || 0;
+                                                }
+                                            } else {
+                                                finalVal = numericValue;
                                             }
-
-                                            finalVal = numericValue;
-                                            break;
                                         }
                                     }
                                 }
@@ -1146,6 +1166,7 @@
                     this.updateBox303Value(nif, year, period, box, num);
                 },
 
+                // Guardado con motor de recálculo matemático activo integrado
                 updateBox303Value(nif, year, period, box, val) {
                     const key = `${nif}_${year}_${period}`;
                     if (!this.records[key]) {
@@ -1153,9 +1174,11 @@
                     }
                     this.records[key][box] = val; 
                     
+                    // Ejecutar el motor de recálculo dinámico en el acto
                     this.recalculateTotals303(nif, year, period);
                 },
 
+                // MOTOR DE RECÁLCULO DINÁMICO REACTIVO DE LA LIQUIDACIÓN 303
                 recalculateTotals303(nif, year, period) {
                     const key = `${nif}_${year}_${period}`;
                     if (!this.records[key]) return;
@@ -1163,6 +1186,7 @@
                     const record = this.records[key];
 
                     // 1. Recalcular Total Cuota IVA Devengado [27]
+                    // Suma: Cuota 4% [03] + Cuota 10% [06] + Cuota 21% [09] + Cuota Intra [11] + Cuota ISP [13] + Cuota Modif [15]
                     const c03 = parseFloat(record['03']) || 0;
                     const c06 = parseFloat(record['06']) || 0;
                     const c09 = parseFloat(record['09']) || 0;
@@ -1174,6 +1198,7 @@
                     record['27'] = totalDevengado;
 
                     // 2. Recalcular Total IVA Deducible [45]
+                    // Suma: Cuota Corrientes [29] + Cuota Inversion [31] + Cuota Intra [37] + Cuota Rectificación [41]
                     const c29 = parseFloat(record['29']) || 0;
                     const c31 = parseFloat(record['31']) || 0;
                     const c37 = parseFloat(record['37']) || 0;
@@ -1183,10 +1208,12 @@
                     record['45'] = totalDeducible;
 
                     // 3. Recalcular Resultado de la liquidación [46]
+                    // Fórmula oficial: Total Devengado [27] - Total Deducible [45] - Cuotas a compensar anteriores [110]
                     const c110 = parseFloat(record['110']) || 0;
                     const resultadoFinal = Math.round((totalDevengado - totalDeducible - c110) * 100) / 100;
                     record['46'] = resultadoFinal;
 
+                    // Guardar y persistir base de datos reactiva local
                     this.records[key] = record;
                     this.saveLocal("records", key, record);
                 },
