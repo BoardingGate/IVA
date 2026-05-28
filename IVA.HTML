@@ -78,9 +78,9 @@
                         <select x-model="selectedCompany" class="w-full text-sm bg-slate-50 border border-slate-300 rounded p-2 focus:ring-1 focus:ring-blue-500 outline-none">
                             <option value="">-- Seleccionar Empresa --</option>
                             <template x-for="comp in Object.values(companies)" :key="comp.nif">
-                                <option :value="comp.nif" x-text="`${comp.name} (${comp.nif})`"></option>
+                                <option :value="comp.nif" x-text="`${cleanCompanyName(comp.name)} (${comp.nif})`"></option>
                             </template>
-                        </select>
+                        </select>                         
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">
@@ -1048,6 +1048,18 @@
 
                     const targetBoxesClean = targetBoxes.map(t => t.box303.replace(/^0+/, '')).concat(['2', '5', '8']);
 
+                    cleanCompanyName(name) {
+                                if (!name || name === 'Empresa Importada') return 'Empresa Importada';
+                                return name
+                                    .replace(/Apellidos\s+y\s+nombre\s+o\s+razón\s+social/gi, '')
+                                    .replace(/Sujeto\s+pasivo/gi, '')
+                                    .replace(/Declarante/gi, '')
+                                    .replace(/N\.I\.F\.|NIF/gi, '')
+                                    .replace(/Obligado\s+tributario/gi, '')
+                                    .replace(/^[:\s,.\-()]+|[:\s,.\-()]+$/g, '') // Quita signos de puntuación sueltos al inicio o final
+                                    .trim();
+                    }    
+
                     const getLineValidation = (line, boxNum) => {
                         const lower = line.toLowerCase();
                         if (lower.match(/\d{2}[/-]\d{2}[/-]\d{4}/) && !lower.includes("devengado") && !lower.includes("deducible")) {
@@ -1150,25 +1162,26 @@
                     return { nif, name, year, period, values };
                 },
 
-                saveParsedResult(data) {
-                    if (!this.companies[data.nif]) {
-                        this.companies[data.nif] = { nif: data.nif, name: data.name };
-                    } else if (data.name !== 'Empresa Importada') {
-                        this.companies[data.nif].name = data.name;
-                    }
-
-                    const recordKey = `${data.nif}_${data.year}_${data.period}`;
-                    this.records[recordKey] = data.values;
+               saveParsedResult(data) {
+                        const cleanName = this.cleanCompanyName(data.name);
+                        
+                        if (!this.companies[data.nif]) {
+                            this.companies[data.nif] = { nif: data.nif, name: cleanName };
+                        } else if (data.name !== 'Empresa Importada') {
+                            this.companies[data.nif].name = cleanName;
+                        }
                     
-                    this.recalculateTotals303(data.nif, data.year, data.period);
-
-                    this.registerYearIfNeeded(data.year);
-                    
-                    this.selectedCompany = data.nif;
-                    this.selectedYear = data.year;
-                    
-                    this.saveAllToStorage();
-                },
+                        const recordKey = `${data.nif}_${data.year}_${data.period}`;
+                        this.records[recordKey] = data.values;
+                        
+                        this.recalculateTotals303(data.nif, data.year, data.period);
+                        this.registerYearIfNeeded(data.year);
+                        
+                        this.selectedCompany = data.nif;
+                        this.selectedYear = data.year;
+                        
+                        this.saveAllToStorage();
+                }
 
                 getBox303Value(nif, year, period, box) {
                     const key = `${nif}_${year}_${period}`;
