@@ -261,7 +261,7 @@
                                             </div>
                                         </div>
 
-                                        <!-- Inversión del Sujeto Pasivo (Etiqueta adaptada) -->
+                                        <!-- Inversión del Sujeto Pasivo -->
                                         <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
                                             <div class="col-span-5 font-medium text-slate-700">Inversión del Sujeto Pasivo (hace contrapunte en emitidas y recibidas pero poner aquí el importe sino no da las bases en emitidas)</div>
                                             <div class="col-span-3">
@@ -297,7 +297,7 @@
                                             </div>
                                         </div>
 
-                                        <!-- Total Devengado Casilla 27 y Acumulador de Bases -->
+                                        <!-- Total Devengado Casilla 27 y Acumulador de Bases (Incluye Información Adicional) -->
                                         <div class="grid grid-cols-12 gap-3 items-center text-xs pt-3 border-t border-slate-200 bg-slate-100 p-2 rounded">
                                             <div class="col-span-5 font-bold text-slate-700 uppercase">Total Cuota IVA Devengado</div>
                                             <div class="col-span-4 flex items-center gap-1.5 bg-white px-2 py-1 rounded border border-slate-300">
@@ -346,7 +346,7 @@
                                             </div>
                                         </div>
 
-                                        <!-- Bases fras. recibidas al 0% (Campo Solicitado) -->
+                                        <!-- Bases fras. recibidas al 0% -->
                                         <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
                                             <div class="col-span-5 font-bold text-emerald-800">Bases fras. recibidas al 0%</div>
                                             <div class="col-span-3">
@@ -510,7 +510,7 @@
 
                         </div>
 
-                        <!-- TAB 2: RESUMEN ANUAL 390 -->
+                        <!-- TAB 2: RESUMEN ANUAL 390 (CON COMPUTADOR DE BASES INTEGRADO) -->
                         <div x-show="currentTab === '390'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                             <div class="p-4 bg-slate-50 border-b border-slate-200">
                                 <h4 class="font-bold text-slate-700 text-sm">Resumen Acumulado y Preparación del Modelo 390</h4>
@@ -664,8 +664,8 @@
             },
             { 
                 label: 'Total IVA Devengado Anual', 
-                description: 'Suma de todas las cuotas de IVA repercutido [27]',
-                baseItem: null, 
+                description: 'Suma de todas las cuotas de IVA repercutido [27] y sus correspondientes bases acumuladas',
+                baseItem: { box390: 'Bases Dev.', sources: ['01', '04', '07', '10', '12', '14', '59', '60', '120', '122', '124'] }, 
                 cuotaItem: { box390: '64', sources: ['27'] } 
             },
             { 
@@ -700,50 +700,50 @@
             },
             { 
                 label: 'Total IVA Deducible Anual', 
-                description: 'Suma de todas las cuotas de IVA soportado [45]',
-                baseItem: null, 
+                description: 'Suma de todas las cuotas de IVA soportado [45] y sus correspondientes bases acumuladas',
+                baseItem: { box390: 'Bases Ded.', sources: ['28', '30', '36', '40', 'base_0percent'] }, 
                 cuotaItem: { box390: '232', sources: ['45'] } 
             },
             { 
                 label: 'Entregas Intracomunitarias de bienes exentas', 
                 description: 'Suma de la casilla [59] de los 4 trimestres',
-                baseItem: null, 
+                baseItem: { box390: 'Base [59]', sources: ['59'] }, 
                 cuotaItem: { box390: '103', sources: ['59'] } 
             },
             { 
                 label: 'Exportaciones y Operaciones Asimiladas', 
                 description: 'Suma de la casilla [60] de los 4 trimestres',
-                baseItem: null, 
+                baseItem: { box390: 'Base [60]', sources: ['60'] }, 
                 cuotaItem: { box390: '104', sources: ['60'] } 
             },
             { 
                 label: 'Op. no sujetas o acogidas a regímenes especiales', 
                 description: 'Suma de la casilla [120] de los 4 trimestres',
-                baseItem: null, 
+                baseItem: { box390: 'Base [120]', sources: ['120'] }, 
                 cuotaItem: { box390: '110', sources: ['120'] } 
             },
             { 
                 label: 'Op. sujetas con inversión de sujeto pasivo', 
                 description: 'Suma de la casilla [122] de los 4 trimestres',
-                baseItem: null, 
+                baseItem: { box390: 'Base [122]', sources: ['122'] }, 
                 cuotaItem: { box390: '112', sources: ['122'] } 
             },
             { 
                 label: 'Op. no sujetas por localización con derecho a deducción', 
                 description: 'Suma de la casilla [124] de los 4 trimestres',
-                baseItem: null, 
+                baseItem: { box390: 'Base [124]', sources: ['124'] }, 
                 cuotaItem: { box390: '114', sources: ['124'] } 
             },
             { 
                 label: 'Cuotas a compensar acumuladas', 
                 description: 'Suma de la casilla [110] de los 4 trimestres',
-                baseItem: null, 
+                baseItem: { box390: 'Suma [110]', sources: ['110'] }, 
                 cuotaItem: { box390: '84', sources: ['110'] } 
             },
             { 
                 label: 'Resultado de Liquidaciones Final', 
                 description: 'Suma de la casilla de resultado de liquidación [46]',
-                baseItem: null, 
+                baseItem: { box390: 'Suma [46]', sources: ['46'] }, 
                 cuotaItem: { box390: '658', sources: ['46'] } 
             }
         ];
@@ -1318,7 +1318,15 @@
                     const b10 = this.getBox303Value(nif, year, period, '10');
                     const b12 = this.getBox303Value(nif, year, period, '12');
                     const b14 = this.getBox303Value(nif, year, period, '14');
-                    return Math.round((b01 + b04 + b07 + b10 + b12 + b14) * 100) / 100;
+                    
+                    // Se añaden los importes de la sección de Información Adicional solicitados
+                    const b59 = this.getBox303Value(nif, year, period, '59');
+                    const b60 = this.getBox303Value(nif, year, period, '60');
+                    const b120 = this.getBox303Value(nif, year, period, '120');
+                    const b122 = this.getBox303Value(nif, year, period, '122');
+                    const b124 = this.getBox303Value(nif, year, period, '124');
+                    
+                    return Math.round((b01 + b04 + b07 + b10 + b12 + b14 + b59 + b60 + b120 + b122 + b124) * 100) / 100;
                 },
 
                 getDeducibleBasesSum(nif, year, period) {
