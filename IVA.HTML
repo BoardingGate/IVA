@@ -22,7 +22,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Consolidador con maquetación idéntica a AEAT y almacenamiento seguro</p>
+                    <p class="text-xs text-blue-200">Consolidador con motor de precisión semántica y descarte de años</p>
                 </div>
             </div>
             
@@ -60,7 +60,7 @@
                         <div class="text-center space-y-2 pointer-events-none">
                             <svg class="w-8 h-8 text-slate-400 group-hover:text-blue-500 mx-auto transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                             <p class="text-xs font-semibold text-slate-600">Suelte aquí sus PDFs</p>
-                            <p class="text-[10px] text-slate-400">Extractor simplificado de alta estabilidad</p>
+                            <p class="text-[10px] text-slate-400">Extractor semántico de alta estabilidad</p>
                         </div>
                     </div>
 
@@ -712,7 +712,6 @@
                 showDebug: false,
                 rawTextPreview: '',
                 
-                // MOTOR SÍNCRONO ULTRA-ESTABLE (Reemplaza IndexedDB para mitigar errores de versión)
                 companies: JSON.parse(localStorage.getItem('iva_companies')) || {},
                 records: JSON.parse(localStorage.getItem('iva_records')) || {},
                 overrides: JSON.parse(localStorage.getItem('iva_overrides')) || {},
@@ -729,18 +728,15 @@
                     type: 'success'
                 },
 
-                // Enlace interno para Alpine
                 mappedBoxes303: MAPPED_BOXES_303,
                 mapping390Horizontal: MAPPING_390_HORIZONTAL,
 
                 init() {
-                    // Inicializar años detectados desde los datos guardados en LocalStorage
                     Object.keys(this.records).forEach(key => {
                         const year = key.split('_')[1];
                         this.registerYearIfNeeded(year);
                     });
 
-                    // Auto-seleccionar primer elemento disponible
                     const keys = Object.keys(this.companies);
                     if (keys.length > 0) {
                         this.selectedCompany = keys[0];
@@ -803,7 +799,6 @@
                             this.loadingStatus = `Analizando ${file.name}...`;
                             const arrayBuffer = await file.arrayBuffer();
                             
-                            // CONVERSIÓN ESTRICTA A UINT8ARRAY (Evita fallos silenciosos de decodificación en navegadores)
                             const typedArray = new Uint8Array(arrayBuffer);
                             const pdf = await pdfjsLib.getDocument(typedArray).promise;
                             
@@ -986,6 +981,7 @@
                     return lines;
                 },
 
+                // EXTRACCIÓN CON FILTRADO COMPLETO DE ANCLAJES SEMÁNTICOS
                 parseReconstructedLines(lines, targetBoxes) {
                     const fullTextUnified = lines.join(" ");
                     
@@ -999,14 +995,26 @@
 
                     // Escáner de vecindad inteligente para la extracción de Razón Social
                     let name = 'Empresa Importada';
-                    if (nif) {
+                    
+                    // Prioridad de extracción 1: Buscar etiquetas oficiales
+                    for (let line of lines) {
+                        const cleanL = line.replace(/Sujeto pasivo|Apellidos y nombre o razón social|[:]/gi, '').trim();
+                        if (line.includes("Razón social") || line.includes("Apellidos y nombre") || line.includes("Sujeto pasivo")) {
+                            if (cleanL.length > 5 && !cleanL.includes("Modelo") && !cleanL.includes("Página")) {
+                                name = cleanL;
+                                break;
+                            }
+                        }
+                    }
+                    // Prioridad de extracción 2: Escaneo de proximidad al NIF
+                    if (nif && name === 'Empresa Importada') {
                         let nifLineIdx = lines.findIndex(l => l.toUpperCase().includes(nif));
                         if (nifLineIdx !== -1) {
                             for (let offset = -2; offset <= 3; offset++) {
                                 const l = lines[nifLineIdx + offset];
                                 if (l) {
-                                    const cleanLine = l.replace(/Sujeto pasivo|Declarante|Apellidos y nombre o razón social|N\.I\.F\.|NIF|[:]/gi, '').trim();
-                                    if (cleanLine.length > 5 && !cleanLine.includes("Página") && !cleanLine.includes("Modelo") && !cleanLine.includes("303") && !cleanLine.includes(nif)) {
+                                    const cleanLine = l.replace(/N\.I\.F\.|NIF|[:]/gi, '').trim();
+                                    if (cleanLine.length > 5 && !cleanLine.includes("Página") && !cleanLine.includes("Modelo") && !cleanLine.includes(nif)) {
                                         name = cleanLine;
                                         break;
                                     }
@@ -1039,6 +1047,36 @@
 
                     const targetBoxesClean = targetBoxes.map(t => t.box303.replace(/^0+/, ''));
 
+                    // Filtros semánticos obligatorios por cada concepto de la AEAT para evitar falsos positivos con fechas, CIFs o páginas
+                    const getLineValidation = (line, boxNum) => {
+                        const lower = line.toLowerCase();
+                        if (lower.match(/\d{2}[/-]\d{2}[/-]\d{4}/) && !lower.includes("devengado") && !lower.includes("deducible")) {
+                            return false; 
+                        }
+                        switch (boxNum) {
+                            case '01': case '03': return lower.includes("4%") || lower.includes("4,00") || lower.includes("devengado");
+                            case '04': case '06': return lower.includes("10%") || lower.includes("10,00") || lower.includes("devengado");
+                            case '07': case '09': return lower.includes("21%") || lower.includes("21,00") || lower.includes("devengado");
+                            case '10': case '11': return lower.includes("intracomunitarias") && (lower.includes("adquisiciones") || lower.includes("adq"));
+                            case '12': case '13': return lower.includes("inversión") && lower.includes("sujeto pasivo");
+                            case '14': case '15': return lower.includes("modificación") && (lower.includes("bases") || lower.includes("cuotas"));
+                            case '27': return lower.includes("total") && lower.includes("devengado");
+                            case '28': case '29': return lower.includes("corrientes") && lower.includes("interiores");
+                            case '30': case '31': return lower.includes("bienes") && lower.includes("inversión") && lower.includes("interiores");
+                            case '36': case '37': return lower.includes("intracomunitarias") && lower.includes("corrientes");
+                            case '40': case '41': return lower.includes("rectificación") && lower.includes("deducciones");
+                            case '45': return lower.includes("total") && lower.includes("deducible");
+                            case '59': return lower.includes("entregas intracomunitarias") || lower.includes("59");
+                            case '60': return lower.includes("exportaciones") || lower.includes("60");
+                            case '120': return lower.includes("regímenes especiales") || lower.includes("120");
+                            case '122': return lower.includes("sujetas") && lower.includes("inversión");
+                            case '124': return lower.includes("localización") && lower.includes("deducción");
+                            case '110': return lower.includes("compensar") || lower.includes("periodos anteriores");
+                            case '46': return lower.includes("resultado") && (lower.includes("liquidación") || lower.includes("liquida"));
+                            default: return true;
+                        }
+                    };
+
                     const values = {};
                     targetBoxes.forEach(target => {
                         let finalVal = 0;
@@ -1048,12 +1086,9 @@
                         const boxRegex = new RegExp(`\\b0?${rBox}\\b|\\b\\[0?${rBox}\\]\\b`);
 
                         for (let line of lines) {
-                            const lowerLine = line.toLowerCase();
-                            if (lowerLine.match(/\d{2}\/\d{2}\/\d{4}/) && !lowerLine.includes("devengado") && !lowerLine.includes("deducible")) {
-                                continue; 
-                            }
-                            if (lowerLine.includes("página") && (boxNum === '10' || boxNum === '12')) {
-                                continue; 
+                            // Aplicar filtro de validación semántica de la casilla
+                            if (!getLineValidation(line, boxNum)) {
+                                continue;
                             }
 
                             const match = line.match(boxRegex);
@@ -1062,7 +1097,6 @@
                                 const matchIndex = match.index;
                                 const matchLength = match[0].length;
 
-                                // Extraer los textos que quedan estrictamente a la derecha de la casilla localizada
                                 const remainingText = line.substring(matchIndex + matchLength).trim();
                                 
                                 // NORMALIZADOR DE ESPACIOS DE MILLAR: Si la línea tiene espacios entre números (ej: "10 500,00"), los unifica en "10500,00"
@@ -1092,6 +1126,11 @@
                                             let cleanedNum = firstToken.replace(/\./g, '').replace(',', '.');
                                             let numericValue = parseFloat(cleanedNum) || 0;
 
+                                            // FILTRO EXCLUSIÓN DE AÑO FISCAL: Si el número extraído coincide de forma exacta con años de cuatro dígitos, es una fecha y la omitimos
+                                            if (firstToken.match(/^20\d{2}$/)) {
+                                                continue; 
+                                            }
+
                                             // FILTRO EXCLUSIÓN TIPO GRAVAMEN: Ignorar porcentajes tipo impositivo (4, 10 o 21) si consultamos casillas de Base General
                                             if (['1', '4', '7'].includes(rBox) && [4, 10, 21].includes(numericValue)) {
                                                 const secondToken = remainingTokens[tokenIdx + 1];
@@ -1118,7 +1157,6 @@
                     if (!this.companies[data.nif]) {
                         this.companies[data.nif] = { nif: data.nif, name: data.name };
                     } else if (data.name !== 'Empresa Importada') {
-                        // Actualizar el nombre si es que el PDF trae el nombre real oficial
                         this.companies[data.nif].name = data.name;
                     }
 
@@ -1238,21 +1276,14 @@
                 },
 
                 updateOverrideValue(nif, year, box390, val) {
-                    const key = `${nif}_${year}_${box390}`;
+                    const key = `${nif}_Corporate_${year}_${box390}`;
+                    const targetKey = `${nif}_${year}_${box390}`;
                     if (val === '') {
-                        delete this.overrides[key];
+                        delete this.overrides[targetKey];
                     } else {
-                        this.overrides[key] = val;
+                        this.overrides[targetKey] = val;
                     }
                     this.saveAllToStorage();
-                },
-
-                getFinal390Value(nif, year, item) {
-                    if (!item) return 0;
-                    if (this.hasOverride(nif, year, item.box390)) {
-                        return this.overrides[`${nif}_${year}_${item.box390}`];
-                    }
-                    return this.calculateSum390(nif, year, item);
                 },
 
                 formatSpanishNumber(value) {
