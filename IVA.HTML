@@ -148,6 +148,19 @@
                             </button>
                         </div>
 
+                        <!-- Alertas de Incongruencia de Compensación -->
+                        <div x-show="currentTab === '303'">
+                            <template x-if="getCompensationWarning(selectedCompany, selectedYear, activeQuarter)">
+                                <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm space-y-1 mb-6">
+                                    <div class="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase tracking-wider">
+                                        <svg class="w-5 h-5 text-amber-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        <span>Auditoría: Descuadre en Compensaciones</span>
+                                    </div>
+                                    <p class="text-xs text-amber-700 font-medium leading-relaxed" x-text="getCompensationWarning(selectedCompany, selectedYear, activeQuarter)"></p>
+                                </div>
+                            </template>
+                        </div>
+
                         <!-- TABLA MAQUETADA TRIMESTRE A TRIMESTRE IDÉNTICA AL MODELO OFICIAL -->
                         <div x-show="currentTab === '303'" class="space-y-6">
                             
@@ -218,14 +231,14 @@
                                             <div class="col-span-3">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[07]</span>
-                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '07')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '07', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '07')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '07', $event.target.value)" class="w-full text-right p-1.5 border border-slate-300 rounded font-mono text-xs focus:border-blue-500 outline-none">
                                                 </div>
                                             </div>
                                             <div class="col-span-1 text-center font-bold text-slate-400">21%</div>
                                             <div class="col-span-3">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[09]</span>
-                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '09')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '09', $event.target.value)" class="w-full text-right p-1.5 border border-slate-300 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '09')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '09', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
                                                 </div>
                                             </div>
                                         </div>
@@ -248,9 +261,9 @@
                                             </div>
                                         </div>
 
-                                        <!-- Inversión del Sujeto Pasivo -->
+                                        <!-- Inversión del Sujeto Pasivo (Etiqueta adaptada) -->
                                         <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
-                                            <div class="col-span-5 font-medium">Inversión del Sujeto Pasivo</div>
+                                            <div class="col-span-5 font-medium text-slate-700">Inversión del Sujeto Pasivo (hace contrapunte en emitidas y recibidas pero poner aquí el importe sino no da las bases en emitidas)</div>
                                             <div class="col-span-3">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[12]</span>
@@ -284,9 +297,13 @@
                                             </div>
                                         </div>
 
-                                        <!-- Total Devengado Casilla 27 -->
+                                        <!-- Total Devengado Casilla 27 y Acumulador de Bases -->
                                         <div class="grid grid-cols-12 gap-3 items-center text-xs pt-3 border-t border-slate-200 bg-slate-100 p-2 rounded">
-                                            <div class="col-span-9 font-bold text-slate-700 uppercase">Total Cuota IVA Devengado</div>
+                                            <div class="col-span-5 font-bold text-slate-700 uppercase">Total Cuota IVA Devengado</div>
+                                            <div class="col-span-4 flex items-center gap-1.5 bg-white px-2 py-1 rounded border border-slate-300">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Suma Bases:</span>
+                                                <span class="font-mono font-bold text-slate-800 text-right w-full" x-text="formatSpanishNumber(getDevengadoBasesSum(selectedCompany, selectedYear, activeQuarter))"></span>
+                                            </div>
                                             <div class="col-span-3">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="font-mono bg-blue-100 text-blue-800 px-1 py-0.5 rounded text-[10px] font-bold">[27]</span>
@@ -327,6 +344,19 @@
                                                     <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '29')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '29', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-emerald-500 outline-none">
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <!-- Bases fras. recibidas al 0% (Campo Solicitado) -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
+                                            <div class="col-span-5 font-bold text-emerald-800">Bases fras. recibidas al 0%</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] font-bold">[0%]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, 'base_0percent')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, 'base_0percent', $event.target.value)" class="w-full text-right p-1.5 border border-slate-300 rounded font-mono text-xs focus:border-emerald-500 bg-emerald-50/20 font-semibold text-emerald-950 outline-none">
+                                                </div>
+                                            </div>
+                                            <div class="col-span-1 text-center text-slate-400">-</div>
+                                            <div class="col-span-3 text-center font-semibold text-slate-400 italic">Informativo manual</div>
                                         </div>
 
                                         <!-- Bienes de Inversión Interiores -->
@@ -383,9 +413,13 @@
                                             </div>
                                         </div>
 
-                                        <!-- Total IVA Deducible [45] -->
+                                        <!-- Total IVA Deducible [45] y Acumulador de Bases -->
                                         <div class="grid grid-cols-12 gap-3 items-center text-xs pt-3 border-t border-slate-200 bg-emerald-50 p-2 rounded">
-                                            <div class="col-span-9 font-bold text-slate-700 uppercase">Total IVA Deducible</div>
+                                            <div class="col-span-5 font-bold text-slate-700 uppercase">Total IVA Deducible</div>
+                                            <div class="col-span-4 flex items-center gap-1.5 bg-white px-2 py-1 rounded border border-slate-300">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Suma Bases:</span>
+                                                <span class="font-mono font-bold text-slate-800 text-right w-full" x-text="formatSpanishNumber(getDeducibleBasesSum(selectedCompany, selectedYear, activeQuarter))"></span>
+                                            </div>
                                             <div class="col-span-3">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="font-mono bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded text-[10px] font-bold">[45]</span>
@@ -593,7 +627,8 @@
             { box303: '122', label: 'Op. sujetas con inversión de sujeto pasivo' },
             { box303: '124', label: 'Op. no sujetas por localización con derecho a deducción' },
             { box303: '110', label: 'Cuotas a compensar de períodos anteriores' },
-            { box303: '46', label: 'Resultado de la Liquidación' }
+            { box303: '46', label: 'Resultado de la Liquidación' },
+            { box303: 'base_0percent', label: 'Bases fras. recibidas al 0%' }
         ];
 
         const MAPPING_390_HORIZONTAL = [
@@ -638,6 +673,12 @@
                 description: 'Suma de bases [28] y cuotas [29] del Modelo 303',
                 baseItem: { box390: '190', sources: ['28'] }, 
                 cuotaItem: { box390: '191', sources: ['29'] } 
+            },
+            { 
+                label: 'Bases fras. recibidas al 0%', 
+                description: 'Suma acumulada de bases de facturas recibidas al 0% declaradas manualmente',
+                baseItem: { box390: '230', sources: ['base_0percent'] }, 
+                cuotaItem: null 
             },
             { 
                 label: 'Op. Interiores de Bienes Inversión Deducibles', 
@@ -1267,6 +1308,66 @@
                     });
 
                     return Math.round(total * 100) / 100;
+                },
+
+                getDevengadoBasesSum(nif, year, period) {
+                    if (!nif || !year || !period) return 0;
+                    const b01 = this.getBox303Value(nif, year, period, '01');
+                    const b04 = this.getBox303Value(nif, year, period, '04');
+                    const b07 = this.getBox303Value(nif, year, period, '07');
+                    const b10 = this.getBox303Value(nif, year, period, '10');
+                    const b12 = this.getBox303Value(nif, year, period, '12');
+                    const b14 = this.getBox303Value(nif, year, period, '14');
+                    return Math.round((b01 + b04 + b07 + b10 + b12 + b14) * 100) / 100;
+                },
+
+                getDeducibleBasesSum(nif, year, period) {
+                    if (!nif || !year || !period) return 0;
+                    const b28 = this.getBox303Value(nif, year, period, '28');
+                    const b30 = this.getBox303Value(nif, year, period, '30');
+                    const b36 = this.getBox303Value(nif, year, period, '36');
+                    const b40 = this.getBox303Value(nif, year, period, '40');
+                    const b0p = this.getBox303Value(nif, year, period, 'base_0percent');
+                    return Math.round((b28 + b30 + b36 + b40 + b0p) * 100) / 100;
+                },
+
+                getCompensationWarning(nif, year, period) {
+                    if (!nif || !year || !period) return null;
+                    
+                    let prevQ, prevY;
+                    if (period === '1T') {
+                        prevQ = '4T';
+                        prevY = (parseInt(year) - 1).toString();
+                    } else if (period === '2T') {
+                        prevQ = '1T';
+                        prevY = year;
+                    } else if (period === '3T') {
+                        prevQ = '2T';
+                        prevY = year;
+                    } else if (period === '4T') {
+                        prevQ = '3T';
+                        prevY = year;
+                    } else {
+                        return null;
+                    }
+
+                    // Comprobar si existe el registro del trimestre anterior
+                    const prevKey = `${nif}_${prevY}_${prevQ}`;
+                    if (!this.records[prevKey]) return null;
+
+                    const prevOutcome = this.getBox303Value(nif, prevY, prevQ, '46');
+                    
+                    // Si el resultado del trimestre anterior fue negativo (a compensar)
+                    if (prevOutcome < 0) {
+                        const expectedComp = Math.abs(prevOutcome);
+                        const currentComp = this.getBox303Value(nif, year, period, '110');
+                        
+                        // Si difieren por más de un céntimo, se reporta la incongruencia
+                        if (Math.abs(currentComp - expectedComp) > 0.01) {
+                            return `El resultado del trimestre anterior (${prevQ} / ${prevY}) fue negativo (-${this.formatSpanishNumber(expectedComp)} €), lo que genera saldo a compensar. Sin embargo, en la casilla [110] (Cuotas a compensar de períodos anteriores) de este trimestre se ha declarado ${this.formatSpanishNumber(currentComp)} € en lugar de los ${this.formatSpanishNumber(expectedComp)} € que correspondían.`;
+                        }
+                    }
+                    return null;
                 },
 
                 getOverrideValue(nif, year, box390) {
