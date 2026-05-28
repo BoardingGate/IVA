@@ -365,7 +365,7 @@
                                             </div>
                                         </div>
 
-                                        <!-- Rectificación de Deducciones -->
+                                        <!-- Rectificación de Deducciones [40/41] -->
                                         <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
                                             <div class="col-span-5 font-medium">Rectificación de Deducciones</div>
                                             <div class="col-span-3">
@@ -653,6 +653,12 @@
                 cuotaItem: { box390: '199', sources: ['37'] } 
             },
             { 
+                label: 'Rectificación de Deducciones (Soportado)', 
+                description: 'Suma acumulada de bases [40] y cuotas [41] de rectificación de deducciones del Modelo 303',
+                baseItem: { box390: '653', sources: ['40'] }, 
+                cuotaItem: { box390: '654', sources: ['41'] } 
+            },
+            { 
                 label: 'Total IVA Deducible Anual', 
                 description: 'Suma de todas las cuotas de IVA soportado [45]',
                 baseItem: null, 
@@ -728,7 +734,6 @@
                     type: 'success'
                 },
 
-                // Enlace interno para Alpine
                 mappedBoxes303: MAPPED_BOXES_303,
                 mapping390Horizontal: MAPPING_390_HORIZONTAL,
 
