@@ -22,7 +22,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Consolidador híbrido de precisión (AcroForms + Filtro inteligente)</p>
+                    <p class="text-xs text-blue-200">Consolidador contable con formato de millar oficial español</p>
                 </div>
             </div>
             
@@ -60,7 +60,7 @@
                         <div class="text-center space-y-2 pointer-events-none">
                             <svg class="w-8 h-8 text-slate-400 group-hover:text-blue-500 mx-auto transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                             <p class="text-xs font-semibold text-slate-600">Suelte aquí sus PDFs</p>
-                            <p class="text-[10px] text-slate-400">Extractor híbrido interactivo</p>
+                            <p class="text-[10px] text-slate-400">Extractor de alta precisión corregido</p>
                         </div>
                     </div>
 
@@ -103,7 +103,7 @@
 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4" x-show="rawTextPreview">
                     <button @click="showDebug = !showDebug" class="text-xs font-bold text-slate-500 hover:text-slate-800 flex justify-between w-full">
-                        <span>Lector de texto plano</span>
+                        <span>Verificador del lector</span>
                         <span x-text="showDebug ? '[-] Ocultar' : '[+] Depurar'"></span>
                     </button>
                     <div x-show="showDebug" class="mt-2">
@@ -119,7 +119,7 @@
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center space-y-3">
                         <svg class="w-16 h-16 text-slate-300 mx-auto" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>
                         <h3 class="text-lg font-bold text-slate-700">Por favor, selecciona o importa una declaración</h3>
-                        <p class="text-slate-500 text-sm max-w-md mx-auto">Sube tus autoliquidaciones oficiales de la AEAT en PDF. El lector analizará los campos de datos interactivos para lograr un cuadre exacto.</p>
+                        <p class="text-slate-500 text-sm max-w-md mx-auto">Sube tus autoliquidaciones oficiales de la AEAT en PDF. El lector analizará los campos de datos interactivos desestimando tipos de gravamen.</p>
                     </div>
                 </template>
 
@@ -148,7 +148,7 @@
                             </button>
                         </div>
 
-                        <!-- TABLA MAQUETADA COMO MODELO 303 OFICIAL -->
+                        <!-- TABLA MAQUETADA COMO MODELO 303 OFICIAL (UNIFICADA HORIZONTAL) -->
                         <div x-show="currentTab === '303'" class="space-y-6">
                             
                             <!-- BLOQUE A: IVA DEVENGADO -->
@@ -157,244 +157,109 @@
                                     <h4 class="font-bold text-xs uppercase tracking-wider">I. IVA DEVENGADO (Régimen General)</h4>
                                     <span class="text-[10px] bg-blue-700 text-blue-100 px-2 py-0.5 rounded font-mono">MODELO 303</span>
                                 </div>
-                                <div class="p-4 space-y-4">
-                                    <div class="grid grid-cols-12 gap-2 text-center font-semibold text-xs text-slate-500 pb-2 border-b border-slate-100">
-                                        <div class="col-span-4 text-left">Concepto de Liquidación</div>
-                                        <div class="col-span-2">Base Imponible</div>
-                                        <div class="col-span-1">Tipo %</div>
-                                        <div class="col-span-5">Cuota Resultante por Trimestre (1T / 2T / 3T / 4T)</div>
+                                <div class="p-4">
+                                    <div class="grid grid-cols-12 gap-2 text-center font-semibold text-xs text-slate-500 pb-2 border-b border-slate-100 mb-3">
+                                        <div class="col-span-4 text-left">Casilla / Concepto Oficial</div>
+                                        <div class="col-span-2">1T</div>
+                                        <div class="col-span-2">2T</div>
+                                        <div class="col-span-2">3T</div>
+                                        <div class="col-span-2">4T</div>
                                     </div>
 
-                                    <!-- Fila 4% -->
-                                    <div class="grid grid-cols-12 gap-2 items-center text-xs">
-                                        <div class="col-span-4 font-medium">Recargo y Régimen General al 4%</div>
-                                        <div class="col-span-2 space-y-1">
-                                            <template x-for="p in ['1T','2T','3T','4T']">
-                                                <div class="flex items-center gap-1">
-                                                    <span class="text-[9px] text-slate-400 font-mono w-4" x-text="p"></span>
-                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '01')" @input="updateBox303Value(selectedCompany, selectedYear, p, '01', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded text-[11px] font-mono">
+                                    <div class="space-y-2">
+                                        <template x-for="item in mappedBoxes303.filter(b => parseInt(b.box303) <= 27)" :key="item.box303">
+                                            <div class="grid grid-cols-12 gap-2 items-center text-xs py-1 border-b border-slate-50 hover:bg-slate-50/50 rounded px-1 transition">
+                                                <div class="col-span-4 font-medium flex items-center">
+                                                    <span class="font-mono bg-blue-50 text-blue-800 px-1.5 py-0.5 rounded mr-2 font-bold" x-text="'['+item.box303+']'"></span>
+                                                    <span x-text="item.label"></span>
                                                 </div>
-                                            </template>
-                                        </div>
-                                        <div class="col-span-1 text-center font-bold text-slate-400">4%</div>
-                                        <!-- Cuotas -->
-                                        <div class="col-span-5 grid grid-cols-4 gap-1">
-                                            <template x-for="p in ['1T','2T','3T','4T']">
-                                                <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '03')" @input="updateBox303Value(selectedCompany, selectedYear, p, '03', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono bg-blue-50/20 hover:bg-white transition focus:bg-white text-[11px]" placeholder="0,00">
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <!-- Fila 10% -->
-                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-100">
-                                        <div class="col-span-4 font-medium">Recargo y Régimen General al 10%</div>
-                                        <div class="col-span-2 space-y-1">
-                                            <template x-for="p in ['1T','2T','3T','4T']">
-                                                <div class="flex items-center gap-1">
-                                                    <span class="text-[9px] text-slate-400 font-mono w-4" x-text="p"></span>
-                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '04')" @input="updateBox303Value(selectedCompany, selectedYear, p, '04', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded text-[11px] font-mono">
-                                                </div>
-                                            </template>
-                                        </div>
-                                        <div class="col-span-1 text-center font-bold text-slate-400">10%</div>
-                                        <div class="col-span-5 grid grid-cols-4 gap-1">
-                                            <template x-for="p in ['1T','2T','3T','4T']">
-                                                <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '06')" @input="updateBox303Value(selectedCompany, selectedYear, p, '06', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono bg-blue-50/20 hover:bg-white transition text-[11px]" placeholder="0,00">
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <!-- Fila 21% -->
-                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-100">
-                                        <div class="col-span-4 font-medium">Régimen General al 21%</div>
-                                        <div class="col-span-2 space-y-1">
-                                            <template x-for="p in ['1T','2T','3T','4T']">
-                                                <div class="flex items-center gap-1">
-                                                    <span class="text-[9px] text-slate-400 font-mono w-4" x-text="p"></span>
-                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '07')" @input="updateBox303Value(selectedCompany, selectedYear, p, '07', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded text-[11px] font-mono">
-                                                </div>
-                                            </template>
-                                        </div>
-                                        <div class="col-span-1 text-center font-bold text-slate-400">21%</div>
-                                        <div class="col-span-5 grid grid-cols-4 gap-1">
-                                            <template x-for="p in ['1T','2T','3T','4T']">
-                                                <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '09')" @input="updateBox303Value(selectedCompany, selectedYear, p, '09', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono bg-blue-50/20 hover:bg-white transition text-[11px]" placeholder="0,00">
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <!-- Adquisiciones Intracomunitarias -->
-                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-100 bg-slate-50/50 p-2 rounded">
-                                        <div class="col-span-4 font-bold text-slate-700">Adquisiciones Intracomunitarias <span class="text-blue-600 font-mono">[10/11]</span></div>
-                                        <div class="col-span-4 space-y-1">
-                                            <span class="text-[10px] text-slate-500 block font-semibold">Bases [10]:</span>
-                                            <div class="grid grid-cols-4 gap-1">
-                                                <template x-for="p in ['1T','2T','3T','4T']">
-                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '10')" @input="updateBox303Value(selectedCompany, selectedYear, p, '10', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Base">
+                                                <template x-for="p in ['1T','2T','3T','4T']" :key="p">
+                                                    <div class="col-span-2">
+                                                        <input type="text"
+                                                               :value="formatSpanishNumber(getBox303Value(selectedCompany, selectedYear, p, item.box303))"
+                                                               @blur="updateBox303Value(selectedCompany, selectedYear, p, item.box303, parseSpanishNumber($event.target.value))"
+                                                               class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none hover:border-slate-300 bg-white"
+                                                               placeholder="0,00">
+                                                    </div>
                                                 </template>
                                             </div>
-                                        </div>
-                                        <div class="col-span-4 space-y-1">
-                                            <span class="text-[10px] text-slate-500 block font-semibold">Cuotas [11]:</span>
-                                            <div class="grid grid-cols-4 gap-1">
-                                                <template x-for="p in ['1T','2T','3T','4T']">
-                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '11')" @input="updateBox303Value(selectedCompany, selectedYear, p, '11', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Cuota">
-                                                </template>
-                                            </div>
-                                        </div>
+                                        </template>
                                     </div>
-
-                                    <!-- Inversión Sujeto Pasivo -->
-                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-2 bg-slate-50/50 p-2 rounded">
-                                        <div class="col-span-4 font-bold text-slate-700">Inversión del Sujeto Pasivo <span class="text-blue-600 font-mono">[12/13]</span></div>
-                                        <div class="col-span-4 space-y-1">
-                                            <span class="text-[10px] text-slate-500 block font-semibold">Bases [12]:</span>
-                                            <div class="grid grid-cols-4 gap-1">
-                                                <template x-for="p in ['1T','2T','3T','4T']">
-                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '12')" @input="updateBox303Value(selectedCompany, selectedYear, p, '12', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Base">
-                                                </template>
-                                            </div>
-                                        </div>
-                                        <div class="col-span-4 space-y-1">
-                                            <span class="text-[10px] text-slate-500 block font-semibold">Cuotas [13]:</span>
-                                            <div class="grid grid-cols-4 gap-1">
-                                                <template x-for="p in ['1T','2T','3T','4T']">
-                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '13')" @input="updateBox303Value(selectedCompany, selectedYear, p, '13', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Cuota">
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Total Devengado Casilla 27 -->
-                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-200 bg-slate-100 p-2 rounded">
-                                        <div class="col-span-7 font-bold text-slate-700 uppercase">Total Cuota IVA Devengado [27]</div>
-                                        <div class="col-span-5 grid grid-cols-4 gap-1">
-                                            <template x-for="p in ['1T','2T','3T','4T']">
-                                                <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '27')" @input="updateBox303Value(selectedCompany, selectedYear, p, '27', $event.target.value)" class="w-full text-right p-1.5 border border-slate-300 rounded font-mono bg-white font-bold text-blue-900 text-[11px]">
-                                            </template>
-                                        </div>
-                                    </div>
-
                                 </div>
                             </div>
 
                             <!-- BLOQUE B: IVA DEDUCIBLE -->
                             <div class="bg-white rounded-xl shadow-sm border border-emerald-200 overflow-hidden">
                                 <div class="p-3.5 bg-emerald-800 text-white flex justify-between items-center">
-                                    <h4 class="font-bold text-xs uppercase tracking-wider">II. IVA DEDUCIBLE (Adquisiciones interiores)</h4>
+                                    <h4 class="font-bold text-xs uppercase tracking-wider">II. IVA DEDUCIBLE</h4>
                                     <span class="text-[10px] bg-emerald-700 text-emerald-100 px-2 py-0.5 rounded font-mono">MODELO 303</span>
                                 </div>
-                                <div class="p-4 space-y-4">
-                                    
-                                    <!-- Op. Corrientes -->
-                                    <div class="grid grid-cols-12 gap-2 items-center text-xs">
-                                        <div class="col-span-4 font-bold text-slate-700">Op. Corrientes Interiores <span class="text-emerald-700 font-mono">[28/29]</span></div>
-                                        <div class="col-span-4 space-y-1">
-                                            <span class="text-[10px] text-slate-500 block">Bases [28]:</span>
-                                            <div class="grid grid-cols-4 gap-1">
-                                                <template x-for="p in ['1T','2T','3T','4T']">
-                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '28')" @input="updateBox303Value(selectedCompany, selectedYear, p, '28', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Base">
-                                                </template>
-                                            </div>
-                                        </div>
-                                        <div class="col-span-4 space-y-1">
-                                            <span class="text-[10px] text-slate-500 block">Cuotas [29]:</span>
-                                            <div class="grid grid-cols-4 gap-1">
-                                                <template x-for="p in ['1T','2T','3T','4T']">
-                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '29')" @input="updateBox303Value(selectedCompany, selectedYear, p, '29', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-[11px]" placeholder="Cuota">
-                                                </template>
-                                            </div>
-                                        </div>
+                                <div class="p-4">
+                                    <div class="grid grid-cols-12 gap-2 text-center font-semibold text-xs text-slate-500 pb-2 border-b border-slate-100 mb-3">
+                                        <div class="col-span-4 text-left">Casilla / Concepto Oficial</div>
+                                        <div class="col-span-2">1T</div>
+                                        <div class="col-span-2">2T</div>
+                                        <div class="col-span-2">3T</div>
+                                        <div class="col-span-2">4T</div>
                                     </div>
 
-                                    <!-- Bienes de Inversión -->
-                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-100">
-                                        <div class="col-span-4 font-bold text-slate-700">Op. Bienes de Inversión Interiores <span class="text-emerald-700 font-mono">[30/31]</span></div>
-                                        <div class="col-span-4 space-y-1">
-                                            <span class="text-[10px] text-slate-500 block">Bases [30]:</span>
-                                            <div class="grid grid-cols-4 gap-1">
-                                                <template x-for="p in ['1T','2T','3T','4T']">
-                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '30')" @input="updateBox303Value(selectedCompany, selectedYear, p, '30', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="Base">
+                                    <div class="space-y-2">
+                                        <template x-for="item in mappedBoxes303.filter(b => parseInt(b.box303) >= 28 && parseInt(b.box303) <= 45)" :key="item.box303">
+                                            <div class="grid grid-cols-12 gap-2 items-center text-xs py-1 border-b border-slate-50 hover:bg-slate-50/50 rounded px-1 transition">
+                                                <div class="col-span-4 font-medium flex items-center">
+                                                    <span class="font-mono bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded mr-2 font-bold" x-text="'['+item.box303+']'"></span>
+                                                    <span x-text="item.label"></span>
+                                                </div>
+                                                <template x-for="p in ['1T','2T','3T','4T']" :key="p">
+                                                    <div class="col-span-2">
+                                                        <input type="text"
+                                                               :value="formatSpanishNumber(getBox303Value(selectedCompany, selectedYear, p, item.box303))"
+                                                               @blur="updateBox303Value(selectedCompany, selectedYear, p, item.box303, parseSpanishNumber($event.target.value))"
+                                                               class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-emerald-500 outline-none hover:border-slate-300 bg-white"
+                                                               placeholder="0,00">
+                                                    </div>
                                                 </template>
                                             </div>
-                                        </div>
-                                        <div class="col-span-4 space-y-1">
-                                            <span class="text-[10px] text-slate-500 block">Cuotas [31]:</span>
-                                            <div class="grid grid-cols-4 gap-1">
-                                                <template x-for="p in ['1T','2T','3T','4T']">
-                                                    <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '31')" @input="updateBox303Value(selectedCompany, selectedYear, p, '31', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-[11px]" placeholder="Cuota">
-                                                </template>
-                                            </div>
-                                        </div>
+                                        </template>
                                     </div>
-
-                                    <!-- Total Deducible Casilla 45 -->
-                                    <div class="grid grid-cols-12 gap-2 items-center text-xs pt-3 border-t border-slate-200 bg-emerald-50 p-2 rounded">
-                                        <div class="col-span-7 font-bold text-slate-700 uppercase">Total IVA Deducible [45]</div>
-                                        <div class="col-span-5 grid grid-cols-4 gap-1">
-                                            <template x-for="p in ['1T','2T','3T','4T']">
-                                                <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '45')" @input="updateBox303Value(selectedCompany, selectedYear, p, '45', $event.target.value)" class="w-full text-right p-1.5 border border-emerald-300 rounded font-mono bg-white font-bold text-emerald-900 text-[11px]">
-                                            </template>
-                                        </div>
-                                    </div>
-
                                 </div>
                             </div>
 
                             <!-- BLOQUES COMPLEMENTARIOS: INFORMACIÓN ADICIONAL & RESULTADO -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                
-                                <div class="bg-white rounded-xl shadow-sm border border-purple-200 overflow-hidden">
-                                    <div class="p-3 bg-purple-800 text-white font-bold text-xs uppercase tracking-wider">
-                                        III. INFORMACIÓN ADICIONAL
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div class="p-3.5 bg-slate-700 text-white flex justify-between items-center">
+                                    <h4 class="font-bold text-xs uppercase tracking-wider">III. INFORMACIÓN ADICIONAL Y RESULTADOS</h4>
+                                    <span class="text-[10px] bg-slate-600 text-slate-100 px-2 py-0.5 rounded font-mono">MODELO 303</span>
+                                </div>
+                                <div class="p-4">
+                                    <div class="grid grid-cols-12 gap-2 text-center font-semibold text-xs text-slate-500 pb-2 border-b border-slate-100 mb-3">
+                                        <div class="col-span-4 text-left">Casilla / Concepto Oficial</div>
+                                        <div class="col-span-2">1T</div>
+                                        <div class="col-span-2">2T</div>
+                                        <div class="col-span-2">3T</div>
+                                        <div class="col-span-2">4T</div>
                                     </div>
-                                    <div class="p-4 space-y-3">
-                                        <div class="text-xs">
-                                            <label class="block font-bold text-slate-700 mb-1">Entregas Intracomunitarias (Exentas) [59]</label>
-                                            <div class="grid grid-cols-4 gap-1">
-                                                <template x-for="p in ['1T','2T','3T','4T']">
-                                                    <div>
-                                                        <span class="text-[9px] text-slate-400 font-mono text-center block" x-text="p"></span>
-                                                        <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '59')" @input="updateBox303Value(selectedCompany, selectedYear, p, '59', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="0,00">
+
+                                    <div class="space-y-2">
+                                        <template x-for="item in mappedBoxes303.filter(b => parseInt(b.box303) > 45)" :key="item.box303">
+                                            <div class="grid grid-cols-12 gap-2 items-center text-xs py-1 border-b border-slate-50 hover:bg-slate-50/50 rounded px-1 transition">
+                                                <div class="col-span-4 font-medium flex items-center">
+                                                    <span class="font-mono bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded mr-2 font-bold" x-text="'['+item.box303+']'"></span>
+                                                    <span x-text="item.label"></span>
+                                                </div>
+                                                <template x-for="p in ['1T','2T','3T','4T']" :key="p">
+                                                    <div class="col-span-2">
+                                                        <input type="text"
+                                                               :value="formatSpanishNumber(getBox303Value(selectedCompany, selectedYear, p, item.box303))"
+                                                               @blur="updateBox303Value(selectedCompany, selectedYear, p, item.box303, parseSpanishNumber($event.target.value))"
+                                                               class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-slate-500 outline-none hover:border-slate-300 bg-white"
+                                                               placeholder="0,00">
                                                     </div>
                                                 </template>
                                             </div>
-                                        </div>
+                                        </template>
                                     </div>
                                 </div>
-
-                                <div class="bg-white rounded-xl shadow-sm border border-slate-300 overflow-hidden">
-                                    <div class="p-3 bg-slate-700 text-white font-bold text-xs uppercase tracking-wider">
-                                        IV. CÁLCULO DE RESULTADO
-                                    </div>
-                                    <div class="p-4 space-y-4">
-                                        <!-- Compensaciones -->
-                                        <div class="text-xs">
-                                            <label class="block font-bold text-slate-700 mb-1">Cuotas a compensar pendientes [110]</label>
-                                            <div class="grid grid-cols-4 gap-1">
-                                                <template x-for="p in ['1T','2T','3T','4T']">
-                                                    <div>
-                                                        <span class="text-[9px] text-slate-400 font-mono text-center block" x-text="p"></span>
-                                                        <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '110')" @input="updateBox303Value(selectedCompany, selectedYear, p, '110', $event.target.value)" class="w-full text-right p-1 border border-slate-200 rounded font-mono text-[10px]" placeholder="0,00">
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </div>
-                                        <!-- Resultado -->
-                                        <div class="text-xs border-t border-slate-100 pt-2">
-                                            <label class="block font-bold text-slate-700 mb-1">Resultado de la liquidación [46]</label>
-                                            <div class="grid grid-cols-4 gap-1">
-                                                <template x-for="p in ['1T','2T','3T','4T']">
-                                                    <div>
-                                                        <span class="text-[9px] text-slate-400 font-mono text-center block" x-text="p"></span>
-                                                        <input type="number" step="0.01" :value="getBox303Value(selectedCompany, selectedYear, p, '46')" @input="updateBox303Value(selectedCompany, selectedYear, p, '46', $event.target.value)" class="w-full text-right p-1.5 border border-slate-300 rounded font-mono font-bold text-slate-800 text-[11px]">
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                             </div>
 
                         </div>
@@ -424,7 +289,7 @@
                                                     <span class="text-slate-700 font-semibold" x-text="item.label"></span>
                                                     <div class="text-[10px] text-slate-400 mt-0.5" x-text="'Se acumula desde casillas 303: ' + item.sources.map(b => `[${b}]`).join(' + ')"></div>
                                                 </td>
-                                                <td class="p-3 text-right font-mono text-slate-500 font-medium" x-text="formatCurrency(calculateSum390(selectedCompany, selectedYear, item))"></td>
+                                                <td class="p-3 text-right font-mono text-slate-500 font-medium" x-text="formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, item))"></td>
                                                 <td class="p-3 text-center">
                                                     <span x-show="hasOverride(selectedCompany, selectedYear, item.box390)" class="inline-block text-amber-600 font-bold bg-amber-100 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide">
                                                         Manual
@@ -435,9 +300,9 @@
                                                 </td>
                                                 <td class="p-2 text-right">
                                                     <div class="relative flex items-center">
-                                                        <input type="number" step="0.01" placeholder="Ej: 150.50"
-                                                               :value="getOverrideValue(selectedCompany, selectedYear, item.box390)"
-                                                               @input="updateOverrideValue(selectedCompany, selectedYear, item.box390, $event.target.value)"
+                                                        <input type="text" placeholder="Ej: 15.000,50"
+                                                               :value="getOverrideValueFormatted(selectedCompany, selectedYear, item.box390)"
+                                                               @blur="updateOverrideValueFormatted(selectedCompany, selectedYear, item.box390, $event.target.value)"
                                                                class="w-full text-right p-1.5 border border-slate-200 rounded focus:border-amber-500 outline-none font-mono text-xs bg-amber-50/10 hover:bg-amber-50/20 focus:bg-white placeholder:text-slate-300">
                                                         <button x-show="hasOverride(selectedCompany, selectedYear, item.box390)" 
                                                                 @click="updateOverrideValue(selectedCompany, selectedYear, item.box390, '')"
@@ -448,7 +313,7 @@
                                                 </td>
                                                 <td class="p-3 text-right font-mono font-bold border-l border-slate-100" 
                                                     :class="hasOverride(selectedCompany, selectedYear, item.box390) ? 'text-amber-700 bg-amber-50/20' : 'text-blue-900 bg-blue-50/40'"
-                                                    x-text="formatCurrency(getFinal390Value(selectedCompany, selectedYear, item))">
+                                                    x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, item))">
                                                 </td>
                                             </tr>
                                         </template>
@@ -498,18 +363,18 @@
                     { box303: '06', label: 'Régimen general - Cuota al 10%' },
                     { box303: '07', label: 'Régimen general - Base Imponible al 21%' },
                     { box303: '09', label: 'Régimen general - Cuota al 21%' },
-                    { box303: '10', label: 'Adq. Intracomunitarias de Bienes/Servicios - Base' },
-                    { box303: '11', label: 'Adq. Intracomunitarias de Bienes/Servicios - Cuota' },
+                    { box303: '10', label: 'Adq. Intracomunitarias - Base' },
+                    { box303: '11', label: 'Adq. Intracomunitarias - Cuota' },
                     { box303: '12', label: 'Inversión del Sujeto Pasivo - Base' },
                     { box303: '13', label: 'Inversión del Sujeto Pasivo - Cuota' },
-                    { box303: '27', label: 'Total Cuota de IVA Devengado' },
+                    { box303: '27', label: 'Total IVA Devengado' },
                     { box303: '28', label: 'Op. Interiores Corrientes - Base' },
                     { box303: '29', label: 'Op. Interiores Corrientes - Cuota' },
                     { box303: '30', label: 'Op. Interiores Bienes Inversión - Base' },
                     { box303: '31', label: 'Op. Interiores Bienes Inversión - Cuota' },
                     { box303: '45', label: 'Total IVA Deducible' },
-                    { box303: '59', label: 'Entregas Intracomunitarias de Bienes/Servicios exentas' },
-                    { box303: '110', label: 'Cuotas a compensar pendientes de períodos anteriores' },
+                    { box303: '59', label: 'Entregas Intracomunitarias exentas' },
+                    { box303: '110', label: 'Cuotas a compensar de períodos anteriores' },
                     { box303: '46', label: 'Resultado de la Liquidación' }
                 ],
 
@@ -652,13 +517,11 @@
                             
                             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                             
-                            // 1. Intentar extracción prioritaria por Campos Interactivos (AcroForms)
                             let parsedResult = await this.parseViaAcroForms(pdf);
-                            let methodUsed = "Campos de Formulario (Alta Precisión)";
+                            let methodUsed = "Campos Oficiales (Precisión Máxima)";
 
-                            // 2. Si no tiene AcroForms, recurrir a la Reconstrucción por Coordenadas espacial
                             if (!parsedResult) {
-                                methodUsed = "Reconstrucción Espacial Heurística (Filtro Inteligente)";
+                                methodUsed = "Agrupación Espacial por Coordenadas (Heurístico)";
                                 let fullReconstructedLines = [];
                                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                                     const page = await pdf.getPage(pageNum);
@@ -673,14 +536,14 @@
                             if (parsedResult) {
                                 this.saveParsedResult(parsedResult);
                                 correctCount++;
-                                this.showToast(`Importado usando: ${methodUsed}`);
+                                this.showToast(`Importado vía: ${methodUsed}`);
                             } else {
-                                this.showToast(`No se detectó el formato oficial del Modelo 303 en: ${file.name}`, "error");
+                                this.showToast(`Estructura no compatible: ${file.name}`, "error");
                             }
 
                         } catch (err) {
                             console.error(err);
-                            this.showToast("Error de renderizado o lectura del archivo PDF.", "error");
+                            this.showToast("Error crítico de lectura del PDF.", "error");
                         }
                     }
 
@@ -688,12 +551,11 @@
                     this.loadingStatus = '';
                 },
 
-                // ESTRATEGIA 1: Extracción directa de la base de datos interactiva del formulario del PDF (AcroForms)
                 async parseViaAcroForms(pdf) {
                     try {
                         const fields = await pdf.getFieldObjects();
                         if (!fields || Object.keys(fields).length === 0) {
-                            return null; // No contiene campos interactivos, pasamos a Estrategia 2
+                            return null;
                         }
 
                         let values = {};
@@ -703,7 +565,6 @@
                         let rawYear = '';
                         let rawPeriod = '';
 
-                        // Analizar todos los metadatos de los campos interactivos
                         for (const name in fields) {
                             const fieldObj = fields[name];
                             const val = fieldObj.value;
@@ -711,14 +572,11 @@
 
                             const cleanFieldName = name.toUpperCase();
 
-                            // Intentar extraer datos identificativos de los campos interactivos del PDF
                             if (cleanFieldName.includes("NIF") || cleanFieldName.includes("DOC_IDENT")) {
                                 rawNif = val.trim().toUpperCase();
                             }
                             if (cleanFieldName.includes("RAZON") || cleanFieldName.includes("NOMBRE") || cleanFieldName.includes("SUJETO")) {
-                                if (val.trim().length > 4 && !rawName.includes(val.trim())) {
-                                    rawName = val.trim();
-                                }
+                                if (val.trim().length > 4) rawName = val.trim();
                             }
                             if (cleanFieldName.includes("EJERCICIO") || cleanFieldName.includes("ANIO") || cleanFieldName.includes("AÑO")) {
                                 if (val.trim().match(/^20\d{2}$/)) rawYear = val.trim();
@@ -727,10 +585,9 @@
                                 rawPeriod = val.trim().toUpperCase();
                             }
 
-                            // Extraer importes de casillas. AEAT nombra internamente sus campos como "C01", "C03", "C110" etc.
                             const boxMatch = name.match(/C0*([0-9]+)/i);
                             if (boxMatch) {
-                                const boxNum = boxMatch[1].padStart(2, '0'); // Normalizar ej: "3" -> "03"
+                                const boxNum = boxMatch[1].padStart(2, '0');
                                 const matchedTarget = this.mappedBoxes303.find(b => b.box303 === boxNum);
                                 if (matchedTarget) {
                                     let cleanedVal = typeof val === 'string' ? val.replace(/\./g, '').replace(',', '.') : val;
@@ -741,7 +598,6 @@
                         }
 
                         if (matchCount > 0) {
-                            // Si faltan NIF, Nombre o año fiscales, hacemos un escaneo de texto de fallback solo para esos datos de cabecera
                             if (!rawNif || !rawYear) {
                                 let fallbackLines = [];
                                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -765,7 +621,6 @@
                                 }
                             }
 
-                            // Normalizar formato de período trimestral si viene como 1, 2, 3, 4 o mensual
                             let normalizedPeriod = '1T';
                             let rawPStr = rawPeriod.replace(/[\s-]/g, '');
                             if (['01','02','03','1','1T'].includes(rawPStr)) normalizedPeriod = '1T';
@@ -782,12 +637,11 @@
                             };
                         }
                     } catch (e) {
-                        console.warn("No se pudo leer vía AcroForms. Pasando a reconstrucción espacial.", e);
+                        console.warn("Fallo lectura interactiva.", e);
                     }
                     return null;
                 },
 
-                // ESTRATEGIA 2: Reconstrucción de líneas por coordenadas
                 async extractTextLinesByCoordinates(page) {
                     const textContent = await page.getTextContent();
                     const items = textContent.items;
@@ -825,7 +679,6 @@
                     return lines;
                 },
 
-                // Extracción analítica segura con filtros de exclusión
                 parseReconstructedLines(lines) {
                     const fullTextUnified = lines.join(" ");
                     
@@ -833,12 +686,10 @@
                         return null;
                     }
 
-                    // 1. Extraer NIF
                     let nif = '';
                     const nifMatch = fullTextUnified.match(/\b([A-HJ-NP-S-W]\d{7}[A-Z\d]|\d{8}[A-Z])\b/i);
                     if (nifMatch) nif = nifMatch[1].toUpperCase();
 
-                    // 2. Extraer Razón Social
                     let name = 'Empresa Importada';
                     for (let line of lines) {
                         if (line.includes("Apellidos y nombre o razón social") || line.includes("Sujeto pasivo")) {
@@ -850,7 +701,6 @@
                         }
                     }
 
-                    // 3. Extraer Ejercicio (Año)
                     let year = new Date().getFullYear().toString();
                     for (let line of lines) {
                         const yearMatch = line.match(/Ejercicio\s*[:]?\s*(20\d{2})/i);
@@ -860,7 +710,6 @@
                         }
                     }
 
-                    // 4. Extraer Periodo (Trimestre)
                     let period = '1T';
                     for (let line of lines) {
                         const periodMatch = line.match(/(?:Periodo|Período)\s*[:]?\s*([1-4]\s*-[sT]|\b[1-4]T\b|\b0[1-9]\b|\b1[0-2]\b)/i);
@@ -874,29 +723,44 @@
                         }
                     }
 
-                    // 5. Extracción segura con descarte de datos no fiscales (Fechas, Páginas)
                     const values = {};
                     this.mappedBoxes303.forEach(target => {
                         let finalVal = 0;
                         const boxNum = target.box303;
-                        
                         const escapedBox = boxNum.replace(/^0+/, ''); 
-                        const regex = new RegExp(`\\b(?:0?${escapedBox}|\\[0?${escapedBox}\\])\\b[\\s.]*(-?[\\d.]+,\\d{2})`);
+
+                        // Buscar todos los números de tipo decimal en la línea que tenga la casilla
+                        const regex = new RegExp(`\\b(?:0?${escapedBox}|\\[0?${escapedBox}\\])\\b[\\s.]*(-?[\\d.]+,\\d{2})`, 'g');
 
                         for (let line of lines) {
-                            // FILTRO INTELIGENTE: Descartar si la línea tiene formato de fecha o número de página para evitar falsos positivos
                             const lowerLine = line.toLowerCase();
                             if (lowerLine.match(/\d{2}\/\d{2}\/\d{4}/) && !lowerLine.includes("devengado") && !lowerLine.includes("deducible")) {
-                                continue; // Salta líneas que sean fechas de presentación
+                                continue; 
                             }
                             if (lowerLine.includes("página") && (boxNum === '10' || boxNum === '12')) {
-                                continue; // Salta números de página para evitar confusión con casillas 10 u 12
+                                continue; 
                             }
 
-                            const match = line.match(regex);
-                            if (match && match[1]) {
-                                let cleanedNum = match[1].replace(/\./g, '').replace(',', '.');
-                                finalVal = parseFloat(cleanedNum) || 0;
+                            // Limpiar de la línea los tipos de gravamen para evitar que se confundan con bases
+                            let cleanLine = line
+                                .replace(/\b02\s*4,00\b/g, '')
+                                .replace(/\b05\s*1?0,00\b/g, '')
+                                .replace(/\b08\s*21,00\b/g, '');
+
+                            const matches = [...cleanLine.matchAll(regex)];
+                            if (matches.length > 0) {
+                                for (let m of matches) {
+                                    let valStr = m[1].replace(/\./g, '').replace(',', '.');
+                                    let numericValue = parseFloat(valStr) || 0;
+                                    
+                                    // FILTRO EXCLUSIÓN TIPO GRAVAMEN: Descartar el valor si coincide de forma exacta con los porcentajes de IVA (4, 10 o 21)
+                                    if ((boxNum === '01' || boxNum === '04' || boxNum === '07') && [4, 10, 21].includes(numericValue)) {
+                                        continue; 
+                                    }
+                                    
+                                    finalVal = numericValue;
+                                    break;
+                                }
                                 break;
                             }
                         }
@@ -936,7 +800,7 @@
                     if (!this.records[key]) {
                         this.records[key] = {};
                     }
-                    this.records[key][box] = parseFloat(val) || 0;
+                    this.records[key][box] = val; // Se guarda el número flotante directamente
                     this.saveLocal("records", key, this.records[key]);
                 },
 
@@ -963,6 +827,16 @@
                     return this.overrides[key] !== undefined ? this.overrides[key] : '';
                 },
 
+                getOverrideValueFormatted(nif, year, box390) {
+                    const val = this.getOverrideValue(nif, year, box390);
+                    return val !== '' ? this.formatSpanishNumber(val) : '';
+                },
+
+                updateOverrideValueFormatted(nif, year, box390, textValue) {
+                    const num = this.parseSpanishNumber(textValue);
+                    this.updateOverrideValue(nif, year, box390, textValue === '' ? '' : num);
+                },
+
                 hasOverride(nif, year, box390) {
                     const key = `${nif}_${year}_${box390}`;
                     return this.overrides[key] !== undefined && this.overrides[key] !== '';
@@ -974,9 +848,8 @@
                         delete this.overrides[key];
                         this.saveLocal("overrides", key, null);
                     } else {
-                        const num = parseFloat(val) || 0;
-                        this.overrides[key] = num;
-                        this.saveLocal("overrides", key, num);
+                        this.overrides[key] = val;
+                        this.saveLocal("overrides", key, val);
                     }
                 },
 
@@ -987,8 +860,22 @@
                     return this.calculateSum390(nif, year, item);
                 },
 
+                // FORMATEADOR ESPAÑOL DE ALTA PRECISIÓN: Puntos para millares y coma para decimales
+                formatSpanishNumber(value) {
+                    if (value === undefined || value === null || isNaN(value) || value === '') return '0,00';
+                    return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+                },
+
+                // DESFORMATER CONTABLE: Elimina puntos y transforma coma en punto para operar
+                parseSpanishNumber(string) {
+                    if (!string) return 0;
+                    if (typeof string === 'number') return string;
+                    let cleaned = string.replace(/\./g, '').replace(',', '.');
+                    return parseFloat(cleaned) || 0;
+                },
+
                 formatCurrency(value) {
-                    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value || 0);
+                    return this.formatSpanishNumber(value) + " €";
                 },
 
                 deleteActiveYearData() {
