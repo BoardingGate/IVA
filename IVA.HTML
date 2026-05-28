@@ -18,7 +18,7 @@
         <div class="container mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-blue-800 rounded-lg">
-                    <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
@@ -476,7 +476,7 @@
 
                         </div>
 
-                        <!-- TAB 2: RESUMEN ANUAL 390 (REDiseñado HORIZONTAL) -->
+                        <!-- TAB 2: RESUMEN ANUAL 390 -->
                         <div x-show="currentTab === '390'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                             <div class="p-4 bg-slate-50 border-b border-slate-200">
                                 <h4 class="font-bold text-slate-700 text-sm">Resumen Acumulado y Preparación del Modelo 390</h4>
@@ -492,7 +492,6 @@
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 text-xs">
-                                        <!-- Generar filas agrupadas horizontalmente por Base/Cuota -->
                                         <template x-for="row in mapping390Horizontal" :key="row.label">
                                             <tr class="hover:bg-slate-50/50 transition">
                                                 <!-- Concepto -->
@@ -708,7 +707,7 @@
             }
         ];
 
-        // INICIALIZACIÓN OFICIAL DEL HILO EN SEGUNDO PLANO DE MOZILLA
+        // INICIALIZACIÓN DEL HILO EN SEGUNDO PLANO DE MOZILLA
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         function app() {
@@ -829,7 +828,7 @@
                                 correctCount++;
                                 this.showToast(`Importado vía: ${methodUsed}`);
                             } else {
-                                this.showToast(`Estructura no compatible: ${file.name}`, "error");
+                                this.showToast(`Estructura no compatible o datos incompletos: ${file.name}`, "error");
                             }
 
                         } catch (err) {
@@ -911,7 +910,6 @@
                                     rawYear = yearMatch ? yearMatch[1] : new Date().getFullYear().toString();
                                 }
                                 
-                                // Escáner de vecindad inteligente para extraer la razón social oficial junto al NIF
                                 if (rawNif && (!rawName || rawName === 'Empresa Importada')) {
                                     let nifLineIdx = fallbackLines.findIndex(l => l.toUpperCase().includes(rawNif));
                                     if (nifLineIdx !== -1) {
@@ -998,10 +996,8 @@
                     const nifMatch = fullTextUnified.match(/\b([A-HJ-NP-S-W]\d{7}[A-Z\d]|\d{8}[A-Z])\b/i);
                     if (nifMatch) nif = nifMatch[1].toUpperCase();
 
-                    // Escáner de vecindad inteligente para la extracción de Razón Social
                     let name = 'Empresa Importada';
                     
-                    // Prioridad de extracción 1: Buscar etiquetas oficiales
                     for (let line of lines) {
                         const cleanL = line.replace(/Sujeto pasivo|Declarante|Apellidos y nombre o razón social|[:]/gi, '').trim();
                         if (line.includes("Razón social") || line.includes("Apellidos y nombre") || line.includes("Sujeto pasivo")) {
@@ -1011,7 +1007,7 @@
                             }
                         }
                     }
-                    // Prioridad de extracción 2: Escaneo de proximidad al NIF
+
                     if (nif && name === 'Empresa Importada') {
                         let nifLineIdx = lines.findIndex(l => l.toUpperCase().includes(nif));
                         if (nifLineIdx !== -1) {
@@ -1050,7 +1046,6 @@
                         }
                     }
 
-                    // Se añaden celdas impositivas no-objetivo ('2', '5', '8') a la lista de salto para evitar falsos positivos en celdas en blanco de Régimen General
                     const targetBoxesClean = targetBoxes.map(t => t.box303.replace(/^0+/, '')).concat(['2', '5', '8']);
 
                     const getLineValidation = (line, boxNum) => {
@@ -1091,7 +1086,6 @@
                         const boxRegex = new RegExp(`\\b0?${rBox}\\b|\\b\\[0?${rBox}\\]\\b`);
 
                         for (let line of lines) {
-                            // Aplicar filtro de validación semántica de la casilla
                             if (!getLineValidation(line, boxNum)) {
                                 continue;
                             }
@@ -1104,7 +1098,7 @@
 
                                 const remainingText = line.substring(matchIndex + matchLength).trim();
                                 
-                                // NORMALIZADOR DE ESPACIOS DE MILLAR: Si la línea tiene espacios entre números (ej: "10 500,00"), los unifica en "10500,00"
+                                // NORMALIZADOR DE ESPACIOS DE MILLAR
                                 const normalizedText = remainingText.replace(/(\d)\s+(\d{3},)/g, '$1$2');
                                 const remainingTokens = normalizedText.split(/\s+/);
                                 
@@ -1119,27 +1113,25 @@
 
                                     if (firstToken) {
                                         const cleanToken = firstToken.replace(/[\[\]]/g, '').replace(/^0+/, '').replace(/[^0-9]/g, '');
-                                        
-                                        // FILTRO SEGURO DE INTEGRIDAD: Si el token analizado contiene una coma decimal ",", es estrictamente un importe y NO debe considerarse casilla
                                         const isStrictAmount = firstToken.includes(",");
 
                                         if (!isStrictAmount && targetBoxesClean.includes(cleanToken) && cleanToken !== rBox) {
                                             break; 
                                         }
 
-                                        if (/^-?[\d.]+(?:,\d{2})?$/.test(firstToken)) {
+                                        // CAMBIO CLAVE: Se elimina la opcionalidad decimal (el símbolo '?') para exigir de forma estricta la coma y dos dígitos (,\d{2})
+                                        if (/^-?[\d.]+(?:,\d{2})$/.test(firstToken)) {
                                             let cleanedNum = firstToken.replace(/\./g, '').replace(',', '.');
                                             let numericValue = parseFloat(cleanedNum) || 0;
 
-                                            // FILTRO EXCLUSIÓN DE AÑO FISCAL: Si el número extraído coincide de forma exacta con años de cuatro dígitos, es una fecha y la omitimos
                                             if (firstToken.match(/^20\d{2}$/)) {
                                                 continue; 
                                             }
 
-                                            // FILTRO EXCLUSIÓN TIPO GRAVAMEN: Ignorar porcentajes tipo impositivo (4, 10 o 21) si consultamos casillas de Base General
                                             if (['1', '4', '7'].includes(rBox) && [4, 10, 21].includes(numericValue)) {
                                                 const secondToken = remainingTokens[tokenIdx + 1];
-                                                if (secondToken && /^-?[\d.]+(?:,\d{2})?$/.test(secondToken)) {
+                                                // Se aplica también la restricción estricta de dos decimales al token secundario
+                                                if (secondToken && /^-?[\d.]+(?:,\d{2})$/.test(secondToken)) {
                                                     let cleanedSec = secondToken.replace(/\./g, '').replace(',', '.');
                                                     finalVal = parseFloat(cleanedSec) || 0;
                                                 }
@@ -1181,7 +1173,6 @@
                 getBox303Value(nif, year, period, box) {
                     const key = `${nif}_${year}_${period}`;
                     if (this.records[key] && this.records[key][box] !== undefined) {
-                        // FORZAR TRATAMIENTO FLOTANTE DECIMAL EN LECTURA: Asegura la compatibilidad estricta con formatSpanishNumber
                         return parseFloat(this.records[key][box]) || 0;
                     }
                     return 0;
@@ -1214,7 +1205,6 @@
 
                     const record = this.records[key];
 
-                    // 1. Recalcular Total Cuota IVA Devengado [27]
                     const c03 = parseFloat(record['03']) || 0;
                     const c06 = parseFloat(record['06']) || 0;
                     const c09 = parseFloat(record['09']) || 0;
@@ -1225,7 +1215,6 @@
                     const totalDevengado = Math.round((c03 + c06 + c09 + c11 + c13 + c15) * 100) / 100;
                     record['27'] = totalDevengado;
 
-                    // 2. Recalcular Total IVA Deducible [45]
                     const c29 = parseFloat(record['29']) || 0;
                     const c31 = parseFloat(record['31']) || 0;
                     const c37 = parseFloat(record['37']) || 0;
@@ -1234,7 +1223,6 @@
                     const totalDeducible = Math.round((c29 + c31 + c37 + c41) * 100) / 100;
                     record['45'] = totalDeducible;
 
-                    // 3. Recalcular Resultado de la liquidación [46]
                     const c110 = parseFloat(record['110']) || 0;
                     const resultadoFinal = Math.round((totalDevengado - totalDeducible - c110) * 100) / 100;
                     record['46'] = resultadoFinal;
