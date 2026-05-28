@@ -8,8 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js para la reactividad de la interfaz -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- PDF.js de Mozilla para la lectura de documentos localmente -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <!-- PDF.js de Mozilla v2 (Estable y de alta compatibilidad) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen font-sans" x-data="app()">
 
@@ -22,7 +22,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Consolidador con motor de precisión de corte milimétrico</p>
+                    <p class="text-xs text-blue-200">Motor de importación de alta precisión (Failsafe Storage)</p>
                 </div>
             </div>
             
@@ -60,7 +60,7 @@
                         <div class="text-center space-y-2 pointer-events-none">
                             <svg class="w-8 h-8 text-slate-400 group-hover:text-blue-500 mx-auto transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                             <p class="text-xs font-semibold text-slate-600">Suelte aquí sus PDFs</p>
-                            <p class="text-[10px] text-slate-400">Extractor híbrido interactivo</p>
+                            <p class="text-[10px] text-slate-400">Extractor de alta fidelidad con autorrepercusión</p>
                         </div>
                     </div>
 
@@ -564,7 +564,7 @@
     </main>
 
     <script>
-        // CONSTANTES GLOBALES DE CONFIGURACIÓN FISCAL (INMUNE A CONTEXTO 'THIS')
+        // CONFIGURACIÓN CONSTANTES DE RECONOCIMIENTO (A PRUEBA DE CONTEXTOS DINÁMICOS)
         const MAPPED_BOXES_303 = [
             { box303: '01', label: 'Régimen general - Base Imponible al 4%' },
             { box303: '03', label: 'Régimen general - Cuota al 4%' },
@@ -683,7 +683,7 @@
                 cuotaItem: { box390: '112', sources: ['122'] } 
             },
             { 
-                label: 'Op. no sujetas por localización con deducción', 
+                label: 'Op. no sujetas por localización con derecho a deducción', 
                 description: 'Suma de la casilla [124] de los 4 trimestres',
                 baseItem: null, 
                 cuotaItem: { box390: '114', sources: ['124'] } 
@@ -702,8 +702,8 @@
             }
         ];
 
-        // CONFIGURACIÓN OBLIGATORIA DEL HILO DE MOZILLA
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        // INICIALIZACIÓN OFICIAL DEL HILO EN SEGUNDO PLANO DE MOZILLA
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         function app() {
             return {
@@ -712,9 +712,10 @@
                 showDebug: false,
                 rawTextPreview: '',
                 
-                companies: {}, 
-                records: {},   
-                overrides: {}, 
+                // MOTOR SÍNCRONO ULTRA-ESTABLE (Reemplaza IndexedDB para mitigar errores de versión)
+                companies: JSON.parse(localStorage.getItem('iva_companies')) || {},
+                records: JSON.parse(localStorage.getItem('iva_records')) || {},
+                overrides: JSON.parse(localStorage.getItem('iva_overrides')) || {},
                 
                 selectedCompany: '',
                 selectedYear: '',
@@ -728,14 +729,24 @@
                     type: 'success'
                 },
 
-                db: null,
-
-                // Inyección de constantes de forma interna en Alpine
+                // Enlace interno para Alpine
                 mappedBoxes303: MAPPED_BOXES_303,
                 mapping390Horizontal: MAPPING_390_HORIZONTAL,
 
-                async init() {
-                    this.initIndexedDB();
+                init() {
+                    // Inicializar años detectados desde los datos guardados en LocalStorage
+                    Object.keys(this.records).forEach(key => {
+                        const year = key.split('_')[1];
+                        this.registerYearIfNeeded(year);
+                    });
+
+                    // Auto-seleccionar primer elemento disponible
+                    const keys = Object.keys(this.companies);
+                    if (keys.length > 0) {
+                        this.selectedCompany = keys[0];
+                        this.selectedYear = new Date().getFullYear().toString();
+                        this.registerYearIfNeeded(this.selectedYear);
+                    }
                 },
 
                 showToast(message, type = 'success') {
@@ -745,57 +756,6 @@
                     setTimeout(() => { this.toast.show = false; }, 4000);
                 },
 
-                initIndexedDB() {
-                    const request = indexedDB.open("iva_acumulador_db", 1);
-                    
-                    request.onupgradeneeded = (event) => {
-                        const db = event.target.result;
-                        if (!db.objectStoreNames.contains("companies")) db.createObjectStore("companies", { keyPath: "nif" });
-                        if (!db.objectStoreNames.contains("records")) db.createObjectStore("records");
-                        if (!db.objectStoreNames.contains("overrides")) db.createObjectStore("overrides");
-                    };
-
-                    request.onsuccess = (event) => {
-                        this.db = event.target.result;
-                        this.loadDataFromDB();
-                    };
-
-                    request.onerror = () => {
-                        this.showToast("No se pudo iniciar la base de datos local en el navegador.", "error");
-                    };
-                },
-
-                loadDataFromDB() {
-                    const transaction = this.db.transaction(["companies", "records", "overrides"], "readonly");
-                    
-                    transaction.objectStore("companies").getAll().onsuccess = (e) => {
-                        const list = e.target.result;
-                        list.forEach(c => { this.companies[c.nif] = c; });
-                    };
-
-                    const recordsStore = transaction.objectStore("records");
-                    const recordsReq = recordsStore.openCursor();
-                    recordsReq.onsuccess = (e) => {
-                        const cursor = e.target.result;
-                        if (cursor) {
-                            this.records[cursor.key] = cursor.value;
-                            const yearFromKey = cursor.key.split('_')[1];
-                            this.registerYearIfNeeded(yearFromKey);
-                            cursor.continue();
-                        }
-                    };
-
-                    const overridesStore = transaction.objectStore("overrides");
-                    const overridesReq = overridesStore.openCursor();
-                    overridesReq.onsuccess = (e) => {
-                        const cursor = e.target.result;
-                        if (cursor) {
-                            this.overrides[cursor.key] = cursor.value;
-                            cursor.continue();
-                        }
-                    };
-                },
-
                 registerYearIfNeeded(year) {
                     if (year && !this.availableYears.includes(year)) {
                         this.availableYears.push(year);
@@ -803,16 +763,10 @@
                     }
                 },
 
-                saveLocal(storeName, key, value) {
-                    if (!this.db) return;
-                    const transaction = this.db.transaction([storeName], "readwrite");
-                    const store = transaction.objectStore(storeName);
-                    
-                    if (value === undefined || value === null || value === '') {
-                        store.delete(key);
-                    } else {
-                        store.put(value, storeName === 'companies' ? undefined : key);
-                    }
+                saveAllToStorage() {
+                    localStorage.setItem('iva_companies', JSON.stringify(this.companies));
+                    localStorage.setItem('iva_records', JSON.stringify(this.records));
+                    localStorage.setItem('iva_overrides', JSON.stringify(this.overrides));
                 },
 
                 addNewCompanyPrompt() {
@@ -828,7 +782,7 @@
 
                     const newComp = { nif, name };
                     this.companies[nif] = newComp;
-                    this.saveLocal("companies", nif, newComp);
+                    this.saveAllToStorage();
                     
                     this.selectedCompany = nif;
                     this.selectedYear = new Date().getFullYear().toString();
@@ -849,7 +803,9 @@
                             this.loadingStatus = `Analizando ${file.name}...`;
                             const arrayBuffer = await file.arrayBuffer();
                             
-                            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                            // CONVERSIÓN ESTRICTA A UINT8ARRAY (Evita fallos silenciosos de decodificación en navegadores)
+                            const typedArray = new Uint8Array(arrayBuffer);
+                            const pdf = await pdfjsLib.getDocument(typedArray).promise;
                             
                             let parsedResult = await this.parseViaAcroForms(pdf);
                             let methodUsed = "Campos Oficiales (Precisión Máxima)";
@@ -877,7 +833,7 @@
 
                         } catch (err) {
                             console.error(err);
-                            this.showToast("Error de lectura del PDF.", "error");
+                            this.showToast(`Error técnico: ${err.message || 'Fallo de lectura del archivo'}`, "error");
                         }
                     }
 
@@ -904,22 +860,23 @@
 
                         for (const name in fields) {
                             const fieldObj = fields[name];
+                            if (!fieldObj) continue;
                             const val = fieldObj.value;
                             if (val === undefined || val === null || val === '') continue;
 
                             const cleanFieldName = name.toUpperCase();
 
                             if (cleanFieldName.includes("NIF") || cleanFieldName.includes("DOC_IDENT")) {
-                                rawNif = val.trim().toUpperCase();
+                                rawNif = val.toString().trim().toUpperCase();
                             }
                             if (cleanFieldName.includes("RAZON") || cleanFieldName.includes("NOMBRE") || cleanFieldName.includes("SUJETO")) {
-                                if (val.trim().length > 4) rawName = val.trim();
+                                if (val.toString().trim().length > 4) rawName = val.toString().trim();
                             }
                             if (cleanFieldName.includes("EJERCICIO") || cleanFieldName.includes("ANIO") || cleanFieldName.includes("AÑO")) {
-                                if (val.trim().match(/^20\d{2}$/)) rawYear = val.trim();
+                                if (val.toString().trim().match(/^20\d{2}$/)) rawYear = val.toString().trim();
                             }
                             if (cleanFieldName.includes("PERIODO") || cleanFieldName.includes("TRIMESTRE")) {
-                                rawPeriod = val.trim().toUpperCase();
+                                rawPeriod = val.toString().trim().toUpperCase();
                             }
 
                             const boxMatch = name.match(/C0*([0-9]+)/i);
@@ -959,7 +916,7 @@
                             }
 
                             let normalizedPeriod = '1T';
-                            let rawPStr = rawPeriod.replace(/[\s-]/g, '');
+                            let rawPStr = rawPeriod.toString().replace(/[\s-]/g, '');
                             if (['01','02','03','1','1T'].includes(rawPStr)) normalizedPeriod = '1T';
                             else if (['04','05','06','2','2T'].includes(rawPStr)) normalizedPeriod = '2T';
                             else if (['07','08','09','3','3T'].includes(rawPStr)) normalizedPeriod = '3T';
@@ -979,7 +936,43 @@
                     return null;
                 },
 
-                // ESTRATEGIA 2: Reconstrucción de líneas por coordenadas y extracción por proximidad de corte de precisión
+                async extractTextLinesByCoordinates(page) {
+                    const textContent = await page.getTextContent();
+                    const items = textContent.items.filter(item => item && item.transform);
+                    if (!items || items.length === 0) return [];
+
+                    const thresholdY = 5;
+
+                    items.sort((a, b) => {
+                        const yA = a.transform[5];
+                        const yB = b.transform[5];
+                        if (Math.abs(yB - yA) > thresholdY) {
+                            return yB - yA;
+                        }
+                        return a.transform[4] - b.transform[4];
+                    });
+
+                    const lines = [];
+                    let currentLineItems = [];
+                    let lastY = items[0].transform[5];
+
+                    items.forEach(item => {
+                        const currentY = item.transform[5];
+                        if (Math.abs(currentY - lastY) > thresholdY) {
+                            lines.push(currentLineItems.join(" "));
+                            currentLineItems = [];
+                            lastY = currentY;
+                        }
+                        currentLineItems.push(item.str);
+                    });
+
+                    if (currentLineItems.length > 0) {
+                        lines.push(currentLineItems.join(" "));
+                    }
+
+                    return lines;
+                },
+
                 parseReconstructedLines(lines, targetBoxes) {
                     const fullTextUnified = lines.join(" ");
                     
@@ -1030,10 +1023,10 @@
                     targetBoxes.forEach(target => {
                         let finalVal = 0;
                         const boxNum = target.box303;
-                        const escapedBox = boxNum.replace(/^0+/, ''); 
+                        const rBox = boxNum.replace(/^0+/, ''); 
 
-                        // Regex de límites de palabras para la localización espacial
-                        const boxRegex = new RegExp(`\\b0?${escapedBox}\\b|\\b\\[0?${escapedBox}\\]\\b`);
+                        // Regex de límites de palabras para la localización espacial de la casilla
+                        const boxRegex = new RegExp(`\\b0?${rBox}\\b|\\b\\[0?${rBox}\\]\\b`);
 
                         for (let line of lines) {
                             const lowerLine = line.toLowerCase();
@@ -1048,9 +1041,9 @@
                             
                             if (match) {
                                 const matchIndex = match.index;
-                                const matchLength = match[0].length; // Usar longitud exacta del texto coincidente real (ej: "[07]")
+                                const matchLength = match[0].length; // Longitud exacta de corte (ej: "[07]" = 4)
 
-                                // Extraer los textos que quedan estrictamente a la derecha del delimitador
+                                // Extraer los textos que quedan estrictamente a la derecha de la casilla localizada
                                 const remainingText = line.substring(matchIndex + matchLength).trim();
                                 const remainingTokens = remainingText.split(/\s+/);
                                 
@@ -1067,8 +1060,8 @@
                                     if (firstToken) {
                                         const cleanToken = firstToken.replace(/[\[\]]/g, '').replace(/^0+/, '').replace(/[^0-9]/g, '');
                                         
-                                        // CONTROL ANTI-ERRORES: Si el primer token siguiente es otra casilla oficial de Hacienda, la casilla consultada está vacía
-                                        if (targetBoxesClean.includes(cleanToken) && cleanToken !== escapedBox) {
+                                        // CONTROL FISCAL DE INTEGRIDAD: Si la primera palabra que sigue es otra casilla, esta se considera a cero
+                                        if (targetBoxesClean.includes(cleanToken) && cleanToken !== rBox) {
                                             break; 
                                         }
 
@@ -1078,7 +1071,7 @@
                                             let numericValue = parseFloat(cleanedNum) || 0;
 
                                             // FILTRO EXCLUSIÓN TIPO GRAVAMEN: Ignorar porcentajes tipo impositivo (4, 10 o 21) si consultamos casillas de Base General
-                                            if (['1', '4', '7'].includes(escapedBox) && [4, 10, 21].includes(numericValue)) {
+                                            if (['1', '4', '7'].includes(rBox) && [4, 10, 21].includes(numericValue)) {
                                                 // Si el tipo impositivo está impreso, el valor real estará en el token adyacente derecho
                                                 const secondToken = remainingTokens[tokenIdx + 1];
                                                 if (secondToken && /^-?[\d.]+(?:,\d{2})?$/.test(secondToken)) {
@@ -1100,6 +1093,24 @@
                     return { nif, name, year, period, values };
                 },
 
+                saveParsedResult(data) {
+                    if (!this.companies[data.nif]) {
+                        this.companies[data.nif] = { nif: data.nif, name: data.name };
+                    }
+
+                    const recordKey = `${data.nif}_${data.year}_${data.period}`;
+                    this.records[recordKey] = data.values;
+                    
+                    this.recalculateTotals303(data.nif, data.year, data.period);
+
+                    this.registerYearIfNeeded(data.year);
+                    
+                    this.selectedCompany = data.nif;
+                    this.selectedYear = data.year;
+                    
+                    this.saveAllToStorage();
+                },
+
                 getBox303Value(nif, year, period, box) {
                     const key = `${nif}_${year}_${period}`;
                     if (this.records[key] && this.records[key][box] !== undefined) {
@@ -1118,7 +1129,6 @@
                     this.updateBox303Value(nif, year, period, box, num);
                 },
 
-                // Guardado con motor de recálculo matemático activo integrado
                 updateBox303Value(nif, year, period, box, val) {
                     const key = `${nif}_${year}_${period}`;
                     if (!this.records[key]) {
@@ -1126,11 +1136,10 @@
                     }
                     this.records[key][box] = val; 
                     
-                    // Ejecutar el motor de recálculo dinámico en el acto
                     this.recalculateTotals303(nif, year, period);
+                    this.saveAllToStorage();
                 },
 
-                // MOTOR DE RECÁLCULO DINÁMICO REACTIVO DE LA LIQUIDACIÓN 303
                 recalculateTotals303(nif, year, period) {
                     const key = `${nif}_${year}_${period}`;
                     if (!this.records[key]) return;
@@ -1138,7 +1147,6 @@
                     const record = this.records[key];
 
                     // 1. Recalcular Total Cuota IVA Devengado [27]
-                    // Suma: Cuota 4% [03] + Cuota 10% [06] + Cuota 21% [09] + Cuota Intra [11] + Cuota ISP [13] + Cuota Modif [15]
                     const c03 = parseFloat(record['03']) || 0;
                     const c06 = parseFloat(record['06']) || 0;
                     const c09 = parseFloat(record['09']) || 0;
@@ -1150,7 +1158,6 @@
                     record['27'] = totalDevengado;
 
                     // 2. Recalcular Total IVA Deducible [45]
-                    // Suma: Cuota Corrientes [29] + Cuota Inversion [31] + Cuota Intra [37] + Cuota Rectificación [41]
                     const c29 = parseFloat(record['29']) || 0;
                     const c31 = parseFloat(record['31']) || 0;
                     const c37 = parseFloat(record['37']) || 0;
@@ -1160,14 +1167,11 @@
                     record['45'] = totalDeducible;
 
                     // 3. Recalcular Resultado de la liquidación [46]
-                    // Fórmula oficial: Total Devengado [27] - Total Deducible [45] - Cuotas a compensar anteriores [110]
                     const c110 = parseFloat(record['110']) || 0;
                     const resultadoFinal = Math.round((totalDevengado - totalDeducible - c110) * 100) / 100;
                     record['46'] = resultadoFinal;
 
-                    // Guardar y persistir base de datos reactiva local
                     this.records[key] = record;
-                    this.saveLocal("records", key, record);
                 },
 
                 calculateSum390(nif, year, item) {
@@ -1213,11 +1217,10 @@
                     const key = `${nif}_${year}_${box390}`;
                     if (val === '') {
                         delete this.overrides[key];
-                        this.saveLocal("overrides", key, null);
                     } else {
                         this.overrides[key] = val;
-                        this.saveLocal("overrides", key, val);
                     }
+                    this.saveAllToStorage();
                 },
 
                 getFinal390Value(nif, year, item) {
@@ -1250,22 +1253,20 @@
                         periods.forEach(p => {
                             const key = `${this.selectedCompany}_${this.selectedYear}_${p}`;
                             delete this.records[key];
-                            this.saveLocal("records", key, null);
                         });
 
                         this.mapping390Horizontal.forEach(row => {
                             if (row.baseItem) {
                                 const key = `${this.selectedCompany}_${this.selectedYear}_${row.baseItem.box390}`;
                                 delete this.overrides[key];
-                                this.saveLocal("overrides", key, null);
                             }
                             if (row.cuotaItem) {
                                 const key = `${this.selectedCompany}_${this.selectedYear}_${row.cuotaItem.box390}`;
                                 delete this.overrides[key];
-                                this.saveLocal("overrides", key, null);
                             }
                         });
 
+                        this.saveAllToStorage();
                         this.showToast("Datos borrados localmente.");
                     }
                 },
@@ -1301,18 +1302,14 @@
                                 Object.assign(this.records, parsed.records);
                                 Object.assign(this.overrides, parsed.overrides);
 
-                                const transaction = this.db.transaction(["companies", "records", "overrides"], "readwrite");
-                                
-                                Object.keys(parsed.companies).forEach(k => transaction.objectStore("companies").put(parsed.companies[k]));
                                 Object.keys(parsed.records).forEach(k => {
-                                    transaction.objectStore("records").put(parsed.records[k], k);
                                     const yearFromKey = k.split('_')[1];
                                     this.registerYearIfNeeded(yearFromKey);
                                     const parts = k.split('_');
                                     this.recalculateTotals303(parts[0], parts[1], parts[2]);
                                 });
-                                Object.keys(parsed.overrides).forEach(k => transaction.objectStore("overrides").put(parsed.overrides[k], k));
 
+                                this.saveAllToStorage();
                                 this.showToast("Base de datos de copia de seguridad restaurada.");
                                 if (Object.keys(this.companies).length > 0) {
                                     this.selectedCompany = Object.keys(this.companies)[0];
