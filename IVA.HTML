@@ -18,11 +18,11 @@
         <div class="container mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-blue-800 rounded-lg">
-                    <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Acumulador IVA España</h1>
-                    <p class="text-xs text-blue-200">Consolidador con motor de precisión semántica y descarte de años</p>
+                    <p class="text-xs text-blue-200">Consolidador con maquetación idéntica a la AEAT y descarte de años</p>
                 </div>
             </div>
             
@@ -60,7 +60,7 @@
                         <div class="text-center space-y-2 pointer-events-none">
                             <svg class="w-8 h-8 text-slate-400 group-hover:text-blue-500 mx-auto transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                             <p class="text-xs font-semibold text-slate-600">Suelte aquí sus PDFs</p>
-                            <p class="text-[10px] text-slate-400">Extractor semántico de alta estabilidad</p>
+                            <p class="text-[10px] text-slate-400">Extractor de alta fidelidad con descarte impositivo</p>
                         </div>
                     </div>
 
@@ -162,115 +162,315 @@
                             </div>
 
                             <div class="space-y-6">
-                                <!-- BLOQUE A: IVA DEVENGADO -->
+                                <!-- BLOQUE A: IVA DEVENGADO (RÉPLICA OFICIAL) -->
                                 <div class="bg-white rounded-xl shadow-sm border border-blue-200 overflow-hidden">
                                     <div class="p-3 bg-blue-800 text-white flex justify-between items-center">
                                         <h4 class="font-bold text-xs uppercase tracking-wider" x-text="`I. IVA DEVENGADO - Trimestre ${activeQuarter}`"></h4>
                                         <span class="text-[10px] bg-blue-700 text-blue-100 px-2 py-0.5 rounded font-mono">REPERCUTIDO</span>
                                     </div>
-                                    <div class="p-4">
-                                        <div class="grid grid-cols-12 gap-2 text-center font-semibold text-xs text-slate-500 pb-2 border-b border-slate-100 mb-3">
-                                            <div class="col-span-4 text-left">Casilla / Concepto Oficial</div>
-                                            <div class="col-span-2">1T</div>
-                                            <div class="col-span-2">2T</div>
-                                            <div class="col-span-2">3T</div>
-                                            <div class="col-span-2">4T</div>
+                                    <div class="p-4 space-y-4">
+                                        <div class="grid grid-cols-12 gap-3 text-center font-bold text-xs text-slate-500 pb-2 border-b border-slate-100">
+                                            <div class="col-span-5 text-left">Concepto de Liquidación</div>
+                                            <div class="col-span-3">Base Imponible</div>
+                                            <div class="col-span-1">Tipo %</div>
+                                            <div class="col-span-3">Cuota Resultante</div>
                                         </div>
 
-                                        <div class="space-y-2">
-                                            <template x-for="item in mappedBoxes303.filter(b => parseInt(b.box303) <= 27)" :key="item.box303">
-                                                <div class="grid grid-cols-12 gap-2 items-center text-xs py-1 border-b border-slate-50 hover:bg-slate-50/50 rounded px-1 transition">
-                                                    <div class="col-span-4 font-medium flex items-center">
-                                                        <span class="font-mono bg-blue-50 text-blue-800 px-1.5 py-0.5 rounded mr-2 font-bold" x-text="'['+item.box303+']'"></span>
-                                                        <span x-text="item.label"></span>
-                                                    </div>
-                                                    <template x-for="p in ['1T','2T','3T','4T']" :key="p">
-                                                        <div class="col-span-2">
-                                                            <input type="text"
-                                                                   :value="getBox303ValueFormatted(selectedCompany, selectedYear, p, item.box303)"
-                                                                   @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, p, item.box303, $event.target.value)"
-                                                                   class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none hover:border-slate-300 bg-white"
-                                                                   placeholder="0,00">
-                                                        </div>
-                                                    </template>
+                                        <!-- Régimen General 4% -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs">
+                                            <div class="col-span-5 font-medium">Régimen General al 4%</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[01]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '01')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '01', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
                                                 </div>
-                                            </template>
+                                            </div>
+                                            <div class="col-span-1 text-center font-bold text-slate-400">4%</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[03]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '03')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '03', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Régimen General 10% -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
+                                            <div class="col-span-5 font-medium">Régimen General al 10%</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[04]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '04')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '04', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                            <div class="col-span-1 text-center font-bold text-slate-400">10%</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[06]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '06')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '06', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Régimen General 21% -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
+                                            <div class="col-span-5 font-medium">Régimen General al 21%</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[07]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '07')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '07', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                            <div class="col-span-1 text-center font-bold text-slate-400">21%</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[09]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '09')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '09', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Adquisiciones Intracomunitarias -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
+                                            <div class="col-span-5 font-medium">Adquisiciones Intracomunitarias</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[10]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '10')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '10', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                            <div class="col-span-1 text-center text-slate-400">-</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[11]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '11')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '11', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Inversión del Sujeto Pasivo -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
+                                            <div class="col-span-5 font-medium">Inversión del Sujeto Pasivo</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[12]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '12')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '12', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                            <div class="col-span-1 text-center text-slate-400">-</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[13]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '13')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '13', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Modificación de Bases y Cuotas -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
+                                            <div class="col-span-5 font-medium">Modificación de Bases y Cuotas</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[14]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '14')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '14', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                            <div class="col-span-1 text-center text-slate-400">-</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[15]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '15')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '15', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Total Devengado Casilla 27 -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs pt-3 border-t border-slate-200 bg-slate-100 p-2 rounded">
+                                            <div class="col-span-9 font-bold text-slate-700 uppercase">Total Cuota IVA Devengado</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-blue-100 text-blue-800 px-1 py-0.5 rounded text-[10px] font-bold">[27]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '27')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '27', $event.target.value)" class="w-full text-right p-1.5 border border-slate-300 rounded font-mono bg-white font-bold text-blue-900 text-xs">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- BLOQUE B: IVA DEDUCIBLE -->
+                                <!-- BLOQUE B: IVA DEDUCIBLE (RÉPLICA OFICIAL) -->
                                 <div class="bg-white rounded-xl shadow-sm border border-emerald-200 overflow-hidden">
                                     <div class="p-3 bg-emerald-800 text-white flex justify-between items-center">
                                         <h4 class="font-bold text-xs uppercase tracking-wider" x-text="`II. IVA DEDUCIBLE - Trimestre ${activeQuarter}`"></h4>
                                         <span class="text-[10px] bg-emerald-700 text-emerald-100 px-2 py-0.5 rounded font-mono">SOPORTADO</span>
                                     </div>
-                                    <div class="p-4">
-                                        <div class="grid grid-cols-12 gap-2 text-center font-semibold text-xs text-slate-500 pb-2 border-b border-slate-100 mb-3">
-                                            <div class="col-span-4 text-left">Casilla / Concepto Oficial</div>
-                                            <div class="col-span-2">1T</div>
-                                            <div class="col-span-2">2T</div>
-                                            <div class="col-span-2">3T</div>
-                                            <div class="col-span-2">4T</div>
+                                    <div class="p-4 space-y-4">
+                                        <div class="grid grid-cols-12 gap-3 text-center font-bold text-xs text-slate-500 pb-2 border-b border-slate-100">
+                                            <div class="col-span-5 text-left">Concepto de Liquidación</div>
+                                            <div class="col-span-3">Base Imponible</div>
+                                            <div class="col-span-1 text-slate-400">-</div>
+                                            <div class="col-span-3">Cuota Deducible</div>
                                         </div>
 
-                                        <div class="space-y-2">
-                                            <template x-for="item in mappedBoxes303.filter(b => parseInt(b.box303) >= 28 && parseInt(b.box303) <= 45)" :key="item.box303">
-                                                <div class="grid grid-cols-12 gap-2 items-center text-xs py-1 border-b border-slate-50 hover:bg-slate-50/50 rounded px-1 transition">
-                                                    <div class="col-span-4 font-medium flex items-center">
-                                                        <span class="font-mono bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded mr-2 font-bold" x-text="'['+item.box303+']'"></span>
-                                                        <span x-text="item.label"></span>
-                                                    </div>
-                                                    <template x-for="p in ['1T','2T','3T','4T']" :key="p">
-                                                        <div class="col-span-2">
-                                                            <input type="text"
-                                                                   :value="getBox303ValueFormatted(selectedCompany, selectedYear, p, item.box303)"
-                                                                   @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, p, item.box303, $event.target.value)"
-                                                                   class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-emerald-500 outline-none hover:border-slate-300 bg-white"
-                                                                   placeholder="0,00">
-                                                        </div>
-                                                    </template>
+                                        <!-- Corrientes Interiores -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs">
+                                            <div class="col-span-5 font-medium">Operaciones Corrientes Interiores</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[28]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '28')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '28', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-emerald-500 outline-none">
                                                 </div>
-                                            </template>
+                                            </div>
+                                            <div class="col-span-1 text-center text-slate-400">-</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[29]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '29')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '29', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-emerald-500 outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Bienes de Inversión Interiores -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
+                                            <div class="col-span-5 font-medium">Operaciones de Bienes de Inversión Interiores</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[30]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '30')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '30', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-emerald-500 outline-none">
+                                                </div>
+                                            </div>
+                                            <div class="col-span-1 text-center text-slate-400">-</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[31]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '31')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '31', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-emerald-500 outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Adquisiciones Intracomunitarias corrientes [36/37] -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
+                                            <div class="col-span-5 font-medium">Adquisiciones Intracomunitarias de Bienes y Servicios Corrientes</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[36]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '36')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '36', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-emerald-500 outline-none">
+                                                </div>
+                                            </div>
+                                            <div class="col-span-1 text-center text-slate-400">-</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[37]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '37')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '37', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-emerald-500 outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rectificación de Deducciones -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs pt-2 border-t border-slate-50">
+                                            <div class="col-span-5 font-medium">Rectificación de Deducciones</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[40]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '40')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '40', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-emerald-500 outline-none">
+                                                </div>
+                                            </div>
+                                            <div class="col-span-1 text-center text-slate-400">-</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[41]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '41')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '41', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-emerald-500 outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Total IVA Deducible [45] -->
+                                        <div class="grid grid-cols-12 gap-3 items-center text-xs pt-3 border-t border-slate-200 bg-emerald-50 p-2 rounded">
+                                            <div class="col-span-9 font-bold text-slate-700 uppercase">Total IVA Deducible</div>
+                                            <div class="col-span-3">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-mono bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded text-[10px] font-bold">[45]</span>
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '45')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '45', $event.target.value)" class="w-full text-right p-1.5 border border-emerald-300 rounded font-mono bg-white font-bold text-emerald-900 text-xs">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- SECCIÓN III Y IV: ADICIONALES Y RESULTADO -->
-                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                                    <div class="p-3 bg-slate-700 text-white flex justify-between items-center">
-                                        <h4 class="font-bold text-xs uppercase tracking-wider" x-text="`III. INFORMACIÓN ADICIONAL Y RESULTADO - Trimestre ${activeQuarter}`"></h4>
-                                        <span class="text-[10px] bg-slate-600 text-slate-100 px-2 py-0.5 rounded font-mono">ADICIONAL</span>
-                                    </div>
-                                    <div class="p-4">
-                                        <div class="grid grid-cols-12 gap-2 text-center font-semibold text-xs text-slate-500 pb-2 border-b border-slate-100 mb-3">
-                                            <div class="col-span-4 text-left">Casilla / Concepto Oficial</div>
-                                            <div class="col-span-2">1T</div>
-                                            <div class="col-span-2">2T</div>
-                                            <div class="col-span-2">3T</div>
-                                            <div class="col-span-2">4T</div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    
+                                    <!-- Información adicional -->
+                                    <div class="bg-white rounded-xl shadow-sm border border-purple-200 overflow-hidden">
+                                        <div class="p-3.5 bg-purple-800 text-white font-bold text-xs uppercase tracking-wider">
+                                            III. INFORMACIÓN ADICIONAL
                                         </div>
+                                        <div class="p-4 space-y-3">
+                                            <!-- Box 59 -->
+                                            <div class="text-xs flex items-center justify-between">
+                                                <span class="font-medium text-slate-700 flex items-center">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500 mr-2">[59]</span>
+                                                    Entregas Intracomunitarias de Bienes/Servicios Exentas
+                                                </span>
+                                                <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '59')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '59', $event.target.value)" class="w-36 text-right p-1.5 border border-slate-200 rounded font-mono text-xs">
+                                            </div>
+                                            <!-- Box 60 -->
+                                            <div class="text-xs flex items-center justify-between pt-2 border-t border-slate-50">
+                                                <span class="font-medium text-slate-700 flex items-center">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500 mr-2">[60]</span>
+                                                    Exportaciones y Operaciones Asimiladas
+                                                </span>
+                                                <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '60')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '60', $event.target.value)" class="w-36 text-right p-1.5 border border-slate-200 rounded font-mono text-xs">
+                                            </div>
+                                            <!-- Box 120 -->
+                                            <div class="text-xs flex items-center justify-between pt-2 border-t border-slate-50">
+                                                <span class="font-medium text-slate-700 flex items-center">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500 mr-2">[120]</span>
+                                                    Operaciones no sujetas o acogidas a regímenes especiales
+                                                </span>
+                                                <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '120')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '120', $event.target.value)" class="w-36 text-right p-1.5 border border-slate-200 rounded font-mono text-xs">
+                                            </div>
+                                            <!-- Box 122 -->
+                                            <div class="text-xs flex items-center justify-between pt-2 border-t border-slate-50">
+                                                <span class="font-medium text-slate-700 flex items-center">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500 mr-2">[122]</span>
+                                                    Operaciones sujetas con inversión de sujeto pasivo
+                                                </span>
+                                                <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '122')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '122', $event.target.value)" class="w-36 text-right p-1.5 border border-slate-200 rounded font-mono text-xs">
+                                            </div>
+                                            <!-- Box 124 -->
+                                            <div class="text-xs flex items-center justify-between pt-2 border-t border-slate-50">
+                                                <span class="font-medium text-slate-700 flex items-center">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500 mr-2">[124]</span>
+                                                    Operaciones no sujetas por localización con deducción
+                                                </span>
+                                                <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '124')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '124', $event.target.value)" class="w-36 text-right p-1.5 border border-slate-200 rounded font-mono text-xs">
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                        <div class="space-y-2">
-                                            <template x-for="item in mappedBoxes303.filter(b => parseInt(b.box303) > 45)" :key="item.box303">
-                                                <div class="grid grid-cols-12 gap-2 items-center text-xs py-1 border-b border-slate-50 hover:bg-slate-50/50 rounded px-1 transition">
-                                                    <div class="col-span-4 font-medium flex items-center">
-                                                        <span class="font-mono bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded mr-2 font-bold" x-text="'['+item.box303+']'"></span>
-                                                        <span x-text="item.label"></span>
-                                                    </div>
-                                                    <template x-for="p in ['1T','2T','3T','4T']" :key="p">
-                                                        <div class="col-span-2">
-                                                            <input type="text"
-                                                                   :value="getBox303ValueFormatted(selectedCompany, selectedYear, p, item.box303)"
-                                                                   @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, p, item.box303, $event.target.value)"
-                                                                   class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-slate-500 outline-none hover:border-slate-300 bg-white"
-                                                                   placeholder="0,00">
-                                                        </div>
-                                                    </template>
-                                                </div>
-                                            </template>
+                                    <!-- Resultado de liquidación -->
+                                    <div class="bg-white rounded-xl shadow-sm border border-slate-300 overflow-hidden">
+                                        <div class="p-3.5 bg-slate-700 text-white font-bold text-xs uppercase tracking-wider">
+                                            IV. RESULTADO DE LA LIQUIDACIÓN
+                                        </div>
+                                        <div class="p-4 space-y-3">
+                                            <div class="text-xs flex items-center justify-between">
+                                                <span class="font-medium text-slate-700 flex items-center">
+                                                    <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500 mr-2">[110]</span>
+                                                    Cuotas a compensar de períodos anteriores
+                                                </span>
+                                                <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '110')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '110', $event.target.value)" class="w-36 text-right p-1.5 border border-slate-200 rounded font-mono text-xs">
+                                            </div>
+                                            <div class="text-xs flex items-center justify-between pt-2 border-t border-slate-50">
+                                                <span class="font-bold text-slate-700 flex items-center">
+                                                    <span class="font-mono bg-slate-200 px-1 py-0.5 rounded text-[10px] font-bold text-slate-600 mr-2">[46]</span>
+                                                    Resultado de la liquidación
+                                                </span>
+                                                <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '46')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '46', $event.target.value)" class="w-36 text-right p-1.5 border border-slate-300 rounded font-mono font-bold text-xs bg-slate-50">
+                                            </div>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
 
@@ -528,6 +728,7 @@
                     type: 'success'
                 },
 
+                // Enlace interno para Alpine
                 mappedBoxes303: MAPPED_BOXES_303,
                 mapping390Horizontal: MAPPING_390_HORIZONTAL,
 
@@ -797,7 +998,7 @@
                     
                     // Prioridad de extracción 1: Buscar etiquetas oficiales
                     for (let line of lines) {
-                        const cleanL = line.replace(/Sujeto pasivo|Apellidos y nombre o razón social|[:]/gi, '').trim();
+                        const cleanL = line.replace(/Sujeto pasivo|Declarante|Apellidos y nombre o razón social|[:]/gi, '').trim();
                         if (line.includes("Razón social") || line.includes("Apellidos y nombre") || line.includes("Sujeto pasivo")) {
                             if (cleanL.length > 5 && !cleanL.includes("Modelo") && !cleanL.includes("Página")) {
                                 name = cleanL;
