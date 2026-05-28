@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -563,7 +563,7 @@
     </main>
 
     <script>
-        // CONFIGURACIÓN CONSTANTES DE RECONOCIMIENTO (A PRUEBA DE CONTEXTOS DINÁMICOS)
+        // CONFIGURACIÓN CONSTANTES DE RECONOCIMIENTO
         const MAPPED_BOXES_303 = [
             { box303: '01', label: 'Régimen general - Base Imponible al 4%' },
             { box303: '03', label: 'Régimen general - Cuota al 4%' },
@@ -707,7 +707,7 @@
             }
         ];
 
-        // INICIALIZACIÓN DEL HILO EN SEGUNDO PLANO DE MOZILLA
+        // INICIALIZACIÓN OFICIAL DEL HILO EN SEGUNDO PLANO DE MOZILLA
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         function app() {
@@ -828,7 +828,7 @@
                                 correctCount++;
                                 this.showToast(`Importado vía: ${methodUsed}`);
                             } else {
-                                this.showToast(`Estructura no compatible o datos incompletos: ${file.name}`, "error");
+                                this.showToast(`Estructura no compatible: ${file.name}`, "error");
                             }
 
                         } catch (err) {
@@ -1083,7 +1083,8 @@
                         const boxNum = target.box303;
                         const rBox = boxNum.replace(/^0+/, ''); 
 
-                        const boxRegex = new RegExp(`\\b0?${rBox}\\b|\\b\\[0?${rBox}\\]\\b`);
+                        // SOLUCIÓN: Excluye de forma estricta coincidencias rodeadas por caracteres decimales españoles o números
+                        const boxRegex = new RegExp(`(?<![\\d.,])0?${rBox}(?![\\d.,])`);
 
                         for (let line of lines) {
                             if (!getLineValidation(line, boxNum)) {
@@ -1119,7 +1120,6 @@
                                             break; 
                                         }
 
-                                        // CAMBIO CLAVE: Se elimina la opcionalidad decimal (el símbolo '?') para exigir de forma estricta la coma y dos dígitos (,\d{2})
                                         if (/^-?[\d.]+(?:,\d{2})$/.test(firstToken)) {
                                             let cleanedNum = firstToken.replace(/\./g, '').replace(',', '.');
                                             let numericValue = parseFloat(cleanedNum) || 0;
@@ -1130,7 +1130,6 @@
 
                                             if (['1', '4', '7'].includes(rBox) && [4, 10, 21].includes(numericValue)) {
                                                 const secondToken = remainingTokens[tokenIdx + 1];
-                                                // Se aplica también la restricción estricta de dos decimales al token secundario
                                                 if (secondToken && /^-?[\d.]+(?:,\d{2})$/.test(secondToken)) {
                                                     let cleanedSec = secondToken.replace(/\./g, '').replace(',', '.');
                                                     finalVal = parseFloat(cleanedSec) || 0;
@@ -1250,138 +1249,4 @@
                 },
 
                 getOverrideValue(nif, year, box390) {
-                    const key = `${nif}_${year}_${box390}`;
-                    return this.overrides[key] !== undefined ? this.overrides[key] : '';
-                },
-
-                getOverrideValueFormatted(nif, year, box390) {
-                    const val = this.getOverrideValue(nif, year, box390);
-                    return val !== '' ? this.formatSpanishNumber(val) : '';
-                },
-
-                updateOverrideValueFormatted(nif, year, box390, textValue) {
-                    const num = this.parseSpanishNumber(textValue);
-                    this.updateOverrideValue(nif, year, box390, textValue === '' ? '' : num);
-                },
-
-                hasOverride(nif, year, box390) {
-                    const key = `${nif}_${year}_${box390}`;
-                    return this.overrides[key] !== undefined && this.overrides[key] !== '';
-                },
-
-                updateOverrideValue(nif, year, box390, val) {
-                    const key = `${nif}_${year}_${box390}`;
-                    if (val === '') {
-                        delete this.overrides[key];
-                    } else {
-                        this.overrides[key] = val;
-                    }
-                    this.saveAllToStorage();
-                },
-
-                getFinal390Value(nif, year, item) {
-                    if (!item) return 0;
-                    if (this.hasOverride(nif, year, item.box390)) {
-                        return this.overrides[`${nif}_${year}_${item.box390}`];
-                    }
-                    return this.calculateSum390(nif, year, item);
-                },
-
-                formatSpanishNumber(value) {
-                    if (value === undefined || value === null || isNaN(value) || value === '') return '0,00';
-                    return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
-                },
-
-                parseSpanishNumber(string) {
-                    if (!string) return 0;
-                    if (typeof string === 'number') return string;
-                    let cleaned = string.replace(/\./g, '').replace(',', '.');
-                    return parseFloat(cleaned) || 0;
-                },
-
-                formatCurrency(value) {
-                    return this.formatSpanishNumber(value) + " €";
-                },
-
-                deleteActiveYearData() {
-                    if (confirm(`¿Seguro que deseas vaciar todos los registros del año fiscal ${this.selectedYear}?`)) {
-                        const periods = ['1T', '2T', '3T', '4T'];
-                        periods.forEach(p => {
-                            const key = `${this.selectedCompany}_${this.selectedYear}_${p}`;
-                            delete this.records[key];
-                        });
-
-                        this.mapping390Horizontal.forEach(row => {
-                            if (row.baseItem) {
-                                const key = `${this.selectedCompany}_${this.selectedYear}_${row.baseItem.box390}`;
-                                delete this.overrides[key];
-                            }
-                            if (row.cuotaItem) {
-                                const key = `${this.selectedCompany}_${this.selectedYear}_${row.cuotaItem.box390}`;
-                                delete this.overrides[key];
-                            }
-                        });
-
-                        this.saveAllToStorage();
-                        this.showToast("Datos borrados localmente.");
-                    }
-                },
-
-                exportData() {
-                    const dataPayload = {
-                        companies: this.companies,
-                        records: this.records,
-                        overrides: this.overrides
-                    };
-
-                    const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `Backup_IVA_${this.selectedCompany || 'General'}_${new Date().toISOString().slice(0,10)}.json`;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                    this.showToast("Copia de seguridad descargada correctamente.");
-                },
-
-                importData(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const parsed = JSON.parse(e.target.result);
-                            
-                            if (parsed.companies && parsed.records && parsed.overrides) {
-                                Object.assign(this.companies, parsed.companies);
-                                Object.assign(this.records, parsed.records);
-                                Object.assign(this.overrides, parsed.overrides);
-
-                                Object.keys(parsed.records).forEach(k => {
-                                    const yearFromKey = k.split('_')[1];
-                                    this.registerYearIfNeeded(yearFromKey);
-                                    const parts = k.split('_');
-                                    this.recalculateTotals303(parts[0], parts[1], parts[2]);
-                                });
-
-                                this.saveAllToStorage();
-                                this.showToast("Base de datos de copia de seguridad restaurada.");
-                                if (Object.keys(this.companies).length > 0) {
-                                    this.selectedCompany = Object.keys(this.companies)[0];
-                                    this.selectedYear = new Date().getFullYear().toString();
-                                }
-                            } else {
-                                this.showToast("El archivo JSON no contiene la estructura esperada.", "error");
-                            }
-                        } catch (err) {
-                            this.showToast("No se pudo leer el archivo de copia de seguridad.", "error");
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-            };
-        }
-    </script>
-</body>
-</html>
+                    const key = `${nif}_${year}_
