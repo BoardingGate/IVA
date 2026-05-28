@@ -1048,18 +1048,6 @@
 
                     const targetBoxesClean = targetBoxes.map(t => t.box303.replace(/^0+/, '')).concat(['2', '5', '8']);
 
-                    cleanCompanyName(name) {
-                                if (!name || name === 'Empresa Importada') return 'Empresa Importada';
-                                return name
-                                    .replace(/Apellidos\s+y\s+nombre\s+o\s+razón\s+social/gi, '')
-                                    .replace(/Sujeto\s+pasivo/gi, '')
-                                    .replace(/Declarante/gi, '')
-                                    .replace(/N\.I\.F\.|NIF/gi, '')
-                                    .replace(/Obligado\s+tributario/gi, '')
-                                    .replace(/^[:\s,.\-()]+|[:\s,.\-()]+$/g, '') // Quita signos de puntuación sueltos al inicio o final
-                                    .trim();
-                    }    
-
                     const getLineValidation = (line, boxNum) => {
                         const lower = line.toLowerCase();
                         if (lower.match(/\d{2}[/-]\d{2}[/-]\d{4}/) && !lower.includes("devengado") && !lower.includes("deducible")) {
@@ -1088,6 +1076,18 @@
                             default: return true;
                         }
                     };
+
+                    cleanCompanyName(name) {
+                                if (!name || name === 'Empresa Importada') return 'Empresa Importada';
+                                return name
+                                    .replace(/Apellidos\s+y\s+nombre\s+o\s+razón\s+social/gi, '')
+                                    .replace(/Sujeto\s+pasivo/gi, '')
+                                    .replace(/Declarante/gi, '')
+                                    .replace(/N\.I\.F\.|NIF/gi, '')
+                                    .replace(/Obligado\s+tributario/gi, '')
+                                    .replace(/^[:\s,.\-()]+|[:\s,.\-()]+$/g, '') 
+                                    .trim();
+                    }    
 
                     const values = {};
                     targetBoxes.forEach(target => {
