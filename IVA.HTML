@@ -1156,14 +1156,18 @@
                 cleanCompanyName(name) {
                     if (!name || name === 'Empresa Importada') return 'Empresa Importada';
                     return name
-                        .replace(/Apellidos\s+y\s+nombre\s+o\s+razón\s+social/gi, '')
+                        // Elimina "Apellidos y nombre o/y//, razón social" en todas sus variantes
+                        .replace(/Apellidos\s+y\s+nombre\s*(?:o|y|\/|,)?\s*razón\s+social/gi, '')
+                        .replace(/Apellidos\s+y\s+nombre/gi, '')
+                        .replace(/Razón\s+social/gi, '')
                         .replace(/Sujeto\s+pasivo/gi, '')
                         .replace(/Declarante/gi, '')
                         .replace(/N\.I\.F\.|NIF/gi, '')
                         .replace(/Obligado\s+tributario/gi, '')
-                        .replace(/^[:\s,.\-()]+|[:\s,.\-()]+$/g, '') 
+                        // Limpia caracteres sobrantes al inicio o al final (como espacios, barras, dos puntos o comas que queden tras quitar el texto)
+                        .replace(/^[:\s,.\-/()]+|[:\s,.\-/()]+$/g, '') 
                         .trim();
-                },
+                }
 
                 saveParsedResult(data) {
                     const cleanName = this.cleanCompanyName(data.name);
