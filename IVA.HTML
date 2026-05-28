@@ -1167,7 +1167,7 @@
                         // Limpia caracteres sobrantes al inicio o al final (como espacios, barras, dos puntos o comas que queden tras quitar el texto)
                         .replace(/^[:\s,.\-/()]+|[:\s,.\-/()]+$/g, '') 
                         .trim();
-                }
+                },
 
                 saveParsedResult(data) {
                     const cleanName = this.cleanCompanyName(data.name);
