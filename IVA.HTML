@@ -1754,20 +1754,27 @@
                 },
 
                 exportData() {
-                    const dataPayload = {
-                        companies: this.companies,
-                        records: this.records,
-                        overrides: this.overrides
-                    };
-
-                    const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `COPIASIVA/Backup_IVA.json`;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                    this.showToast("Copia de seguridad descargada correctamente.");
+                        const dataPayload = {
+                            companies: this.companies,
+                            records: this.records,
+                            overrides: this.overrides
+                        };
+                    
+                        const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        
+                        // Se utiliza la ruta relativa para forzar la detección de la subcarpeta existente
+                        link.download = `COPIASIVA/Backup_IVA.json`;
+                        
+                        // Es indispensable añadir el enlace al DOM antes de hacer clic para que el navegador procese la ruta
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        URL.revokeObjectURL(url);
+                        this.showToast("Copia de seguridad descargada correctamente.");
                 },
 
                 importData(event) {
@@ -1808,38 +1815,64 @@
                     reader.readAsText(file);
                 },
 
-                autoExportBackup() {
-                    // Solo descarga si existen datos para evitar descargas vacías molestas
-                    if (Object.keys(this.companies).length === 0 && Object.keys(this.records).length === 0) {
-                        return;
-                    }
+               exportData() {
+    const dataPayload = {
+        companies: this.companies,
+        records: this.records,
+        overrides: this.overrides
+    };
 
-                    // Se ejecuta con un breve retraso para garantizar la carga completa de la página
-                    setTimeout(() => {
-                        try {
-                            const dataPayload = {
-                                companies: this.companies,
-                                records: this.records,
-                                overrides: this.overrides
-                            };
+    const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Se utiliza la ruta relativa para forzar la detección de la subcarpeta existente
+    link.download = `COPIASIVA/Backup_IVA.json`;
+    
+    // Es indispensable añadir el enlace al DOM antes de hacer clic para que el navegador procese la ruta
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    URL.revokeObjectURL(url);
+    this.showToast("Copia de seguridad descargada correctamente.");
+},
 
-                            const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
-                            const url = URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = `COPIASIVA/Autocopia_IVA.json`;
-                            
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            URL.revokeObjectURL(url);
-                            
-                            this.showToast("Copia de seguridad automática descargada.");
-                        } catch (error) {
-                            console.error("No se pudo autogenerar la copia de seguridad:", error);
-                        }
-                    }, 1500); // 1.5 segundos de retraso de cortesía al entrar
-                }
+autoExportBackup() {
+    // Solo descarga si existen datos para evitar descargas vacías molestas
+    if (Object.keys(this.companies).length === 0 && Object.keys(this.records).length === 0) {
+        return;
+    }
+
+    // Se ejecuta con un breve retraso para garantizar la carga completa de la página
+    setTimeout(() => {
+        try {
+            const dataPayload = {
+                companies: this.companies,
+                records: this.records,
+                overrides: this.overrides
+            };
+
+            const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Se utiliza la ruta relativa para forzar la detección de la subcarpeta existente
+            link.download = `COPIASIVA/Autocopia_IVA.json`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            this.showToast("Copia de seguridad automática descargada.");
+        } catch (error) {
+            console.error("No se pudo autogenerar la copia de seguridad:", error);
+        }
+    }, 1500); // 1.5 segundos de retraso de cortesía al entrar
+}
             };
         }
     </script>
