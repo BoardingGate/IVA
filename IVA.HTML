@@ -213,7 +213,7 @@
                                             <div class="col-span-3">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] font-bold text-slate-500">[04]</span>
-                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '04')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '04', $event.target.value)" class="w-full text-right p-1.5 border border-slate-200 rounded font-mono text-xs focus:border-blue-500 outline-none">
+                                                    <input type="text" :value="getBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '04')" @blur="updateBox303ValueFormatted(selectedCompany, selectedYear, activeQuarter, '04', $event.target.value)" class="w-full text-right p-1.5 border border-slate-300 rounded font-mono text-xs focus:border-blue-500 outline-none">
                                                 </div>
                                             </div>
                                             <div class="col-span-1 text-center font-bold text-slate-400">10%</div>
@@ -572,7 +572,7 @@
                                                             </div>
                                                             <div class="flex justify-between items-center pt-1 border-t border-slate-100">
                                                                 <span class="text-[10px] text-slate-400">Total Cuota:</span>
-                                                                <span class="font-mono font-bold text-xs" :class="hasOverride(selectedCompany, selectedYear, row.cuotaItem.box390) ? 'text-amber-700 font-bold' : 'text-blue-900 font-bold'" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                                <span class="font-mono font-bold text-xs" :class="hasOverride(selectedCompany, selectedYear, row.cuotaItem.box390) ? 'text-amber-700' : 'text-slate-800'" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.cuotaItem))"></span>
                                                             </div>
                                                             <div class="pt-1.5 flex justify-end">
                                                                 <input type="text" placeholder="Ajuste de Cuota"
@@ -581,6 +581,9 @@
                                                                        class="w-full text-right p-1 text-[10px] border border-slate-200 rounded font-mono bg-amber-50/10 focus:bg-white focus:border-amber-500 outline-none placeholder:text-slate-300" title="Ajuste manual de Cuota">
                                                             </div>
                                                         </div>
+                                                    </template>
+                                                    <template x-if="!row.cuotaItem">
+                                                        <div class="text-center text-slate-300 py-4 italic font-medium">No Aplica Cuota</div>
                                                     </template>
                                                 </td>
                                             </tr>
@@ -667,7 +670,7 @@
                                                             </div>
                                                             <div class="flex justify-between items-center pt-1 border-t border-slate-100">
                                                                 <span class="text-[10px] text-slate-400">Total Cuota:</span>
-                                                                <span class="font-mono font-bold text-xs" :class="hasOverride(selectedCompany, selectedYear, row.cuotaItem.box390) ? 'text-amber-700 font-bold' : 'text-emerald-900'" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.cuotaItem))"></span>
+                                                                <span class="font-mono font-bold text-xs" :class="hasOverride(selectedCompany, selectedYear, row.cuotaItem.box390) ? 'text-amber-700' : 'text-emerald-900'" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.cuotaItem))"></span>
                                                             </div>
                                                             <div class="pt-1.5 flex justify-end">
                                                                 <input type="text" placeholder="Ajuste de Cuota"
@@ -753,28 +756,8 @@
                                                     </template>
                                                 </td>
                                                 <!-- Bloque Cuota / Valor -->
-                                                <td class="p-3 align-top bg-purple-50/10">
-                                                    <template x-if="row.cuotaItem">
-                                                        <div class="space-y-1.5">
-                                                            <div class="flex justify-between items-center bg-purple-100/50 p-1 rounded">
-                                                                <span class="font-mono text-purple-800 bg-purple-100 px-1 rounded font-bold" x-text="'['+row.cuotaItem.box390+']'"></span>
-                                                                <span class="font-mono text-purple-950 font-bold" x-text="'Suma: ' + formatSpanishNumber(calculateSum390(selectedCompany, selectedYear, row.cuotaItem))"></span>
-                                                            </div>
-                                                            <div class="flex justify-between items-center pt-1 border-t border-slate-100">
-                                                                <span class="text-[10px] text-slate-400">Total Cuota:</span>
-                                                                <span class="font-mono font-bold text-xs" :class="hasOverride(selectedCompany, selectedYear, row.cuotaItem.box390) ? 'text-amber-700 font-bold' : 'text-purple-900 font-bold'" x-text="formatSpanishNumber(getFinal390Value(selectedCompany, selectedYear, row.cuotaItem))"></span>
-                                                            </div>
-                                                            <div class="pt-1.5 flex justify-end">
-                                                                <input type="text" placeholder="Ajuste de Cuota"
-                                                                       :value="getOverrideValueFormatted(selectedCompany, selectedYear, row.cuotaItem.box390)"
-                                                                       @blur="updateOverrideValueFormatted(selectedCompany, selectedYear, row.cuotaItem.box390, $event.target.value)"
-                                                                       class="w-full text-right p-1 text-[10px] border border-slate-200 rounded font-mono bg-amber-50/10 focus:bg-white focus:border-amber-500 outline-none placeholder:text-slate-300" title="Ajuste manual de Cuota">
-                                                            </div>
-                                                        </div>
-                                                    </template>
-                                                    <template x-if="!row.cuotaItem">
-                                                        <div class="text-center text-slate-300 py-4 italic font-medium">No Aplica Cuota</div>
-                                                    </template>
+                                                <td class="p-3 align-top bg-purple-50/10 text-center text-slate-300 italic font-medium">
+                                                    No Aplica Cuota
                                                 </td>
                                             </tr>
                                         </template>
@@ -963,41 +946,41 @@
                 cuotaItem: { box390: '232', isGroupTotal: true, subItems: ['191', '193', '199', '654'] } 
             },
 
-            // SECCIÓN 3: INFORMACIÓN ADICIONAL
+            // SECCIÓN 3: INFORMACIÓN ADICIONAL (Solo Bases Imponibles)
             { 
                 section: 'adicional',
                 label: 'Entregas Intracomunitarias de bienes exentas', 
                 description: 'Suma de la casilla [59] de los 4 trimestres',
                 baseItem: { box390: 'Base [59]', sources: ['59'] }, 
-                cuotaItem: { box390: '103', sources: ['59'] } 
+                cuotaItem: null 
             },
             { 
                 section: 'adicional',
                 label: 'Exportaciones y Operaciones Asimiladas', 
                 description: 'Suma de la casilla [60] de los 4 trimestres',
                 baseItem: { box390: 'Base [60]', sources: ['60'] }, 
-                cuotaItem: { box390: '104', sources: ['60'] } 
+                cuotaItem: null 
             },
             { 
                 section: 'adicional',
                 label: 'Op. no sujetas o acogidas a regímenes especiales', 
                 description: 'Suma de la casilla [120] de los 4 trimestres',
                 baseItem: { box390: 'Base [120]', sources: ['120'] }, 
-                cuotaItem: { box390: '110', sources: ['120'] } 
+                cuotaItem: null 
             },
             { 
                 section: 'adicional',
                 label: 'Op. sujetas con inversión de sujeto pasivo', 
                 description: 'Suma de la casilla [122] de los 4 trimestres',
                 baseItem: { box390: 'Base [122]', sources: ['122'] }, 
-                cuotaItem: { box390: '112', sources: ['122'] } 
+                cuotaItem: null 
             },
             { 
                 section: 'adicional',
                 label: 'Op. no sujetas por localización con derecho a deducción', 
                 description: 'Suma de la casilla [124] de los 4 trimestres',
                 baseItem: { box390: 'Base [124]', sources: ['124'] }, 
-                cuotaItem: { box390: '114', sources: ['124'] } 
+                cuotaItem: null 
             },
 
             // SECCIÓN 4: LIQUIDACIONES ANUALES
@@ -1397,7 +1380,6 @@
                         const rBox = boxNum.replace(/^0+/, ''); 
 
                         // CORRECCIÓN EXCLUSIÓN DECIMALES: Se evita buscar números que sirvan de cifras decimales dentro de importes.
-                        // Ej. previene que el '11' de '11.169,28' sea confundido con la casilla [11] de cuotas.
                         const boxRegex = new RegExp('(?<![\\d.,])0?' + rBox + '(?![\\d.,])');
 
                         for (let line of lines) {
@@ -1474,7 +1456,7 @@
                         .replace(/Declarante/gi, '')
                         .replace(/N\.I\.F\.|NIF/gi, '')
                         .replace(/Obligado\s+tributario/gi, '')
-                        // Limpia caracteres sobrantes al inicio o al final (como espacios, barras, dos puntos o comas que queden tras quitar el texto)
+                        // Limpia caracteres sobrantes al inicio o al final
                         .replace(/^[:\s,.\-/()]+|[:\s,.\-/()]+$/g, '') 
                         .trim();
                 },
@@ -1782,7 +1764,7 @@
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.href = url;
-                    link.download = `Backup_IVA_${this.selectedCompany || 'General'}_${new Date().toISOString().slice(0,10)}.json`;
+                    link.download = `COPIASIVA/Backup_IVA.json`;
                     link.click();
                     URL.revokeObjectURL(url);
                     this.showToast("Copia de seguridad descargada correctamente.");
@@ -1845,7 +1827,7 @@
                             const url = URL.createObjectURL(blob);
                             const link = document.createElement('a');
                             link.href = url;
-                            link.download = `Autocopia_IVA_${new Date().toISOString().slice(0,10)}.json`;
+                            link.download = `COPIASIVA/Autocopia_IVA.json`;
                             
                             document.body.appendChild(link);
                             link.click();
