@@ -27,10 +27,7 @@
             </div>
             
             <div class="flex flex-wrap gap-2">
-                <button @click="linkFolder()" class="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 rounded text-xs font-semibold flex items-center gap-1.5 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                    <span x-text="directoryHandle ? '⚡ Carpeta Vinculada' : 'Vincular Carpeta COPIASIVA'"></span>
-                </button>    
+                  
                 <button @click="exportData()" class="px-3 py-1.5 bg-blue-800 hover:bg-blue-700 rounded text-xs font-medium flex items-center gap-1.5 transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Exportar Copia de Seguridad
@@ -1086,55 +1083,7 @@
                     }
                 
                     this.autoExportBackup();
-                },
-
-               async linkFolder() {
-                    try {
-                        // Solicita al usuario seleccionar la carpeta COPIASIVA de su Escritorio
-                        const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
-                        this.directoryHandle = handle;
-                        await setStoredHandle(handle);
-                        this.showToast("Carpeta vinculada para las copias de seguridad.");
-                    } catch (err) {
-                        console.warn("Permiso denegado o cancelado", err);
-                        this.showToast("No se ha seleccionado ninguna carpeta.", "error");
-                    }
-                },
-                
-                async verifyPermission() {
-                    if (!this.directoryHandle) return false;
-                    const options = { mode: 'readwrite' };
-                    if ((await this.directoryHandle.queryPermission(options)) === 'granted') {
-                        return true;
-                    }
-                    // Si el navegador requiere volver a confirmar tras refrescar la página
-                    if ((await this.directoryHandle.requestPermission(options)) === 'granted') {
-                        return true;
-                    }
-                    return false;
-                },
-                
-                async saveFileToFolder(filename, content) {
-                    try {
-                        const hasPermission = await this.verifyPermission();
-                        if (!hasPermission) return false;
-                
-                        const fileHandle = await this.directoryHandle.getFileHandle(filename, { create: true });
-                        const writable = await fileHandle.createWritable();
-                        await writable.write(content);
-                        await writable.close();
-                        return true;
-                    } catch (err) {
-                        console.error("Error escribiendo en la carpeta física:", err);
-                        return false;
-                    }
-                },
-                showToast(message, type = 'success') {
-                    this.toast.message = message;
-                    this.toast.type = type;
-                    this.toast.show = true;
-                    setTimeout(() => { this.toast.show = false; }, 4000);
-                },
+                },            
 
                 registerYearIfNeeded(year) {
                     if (year && !this.availableYears.includes(year)) {
@@ -1899,73 +1848,63 @@
     this.showToast("Copia de seguridad descargada correctamente.");
 },
 
-async exportData() {
+exportData() {
     const dataPayload = {
         companies: this.companies,
         records: this.records,
         overrides: this.overrides
     };
-    const jsonString = JSON.stringify(dataPayload, null, 2);
 
-    if (this.directoryHandle) {
-        const success = await this.saveFileToFolder('Backup_IVA.json', jsonString);
-        if (success) {
-            this.showToast("Copia guardada directamente en COPIASIVA/Backup_IVA.json");
-            return;
-        }
-    }
-
-    // Método alternativo si el usuario no ha vinculado la carpeta
-    const blob = new Blob([jsonString], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
+    
+    // Nombre de archivo fijo sin fecha para permitir la sobreescritura en la carpeta por defecto
     link.download = `Backup_IVA.json`;
+    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
     URL.revokeObjectURL(url);
-    this.showToast("Carpeta no vinculada. Descargado en la ruta por defecto.");
+    this.showToast("Copia de seguridad descargada correctamente.");
 },
 
-async autoExportBackup() {
+autoExportBackup() {
+    // Solo descarga si existen datos para evitar descargas vacías molestas
     if (Object.keys(this.companies).length === 0 && Object.keys(this.records).length === 0) {
         return;
     }
 
-    setTimeout(async () => {
+    // Se ejecuta con un breve retraso para garantizar la carga completa de la página
+    setTimeout(() => {
         try {
             const dataPayload = {
                 companies: this.companies,
                 records: this.records,
                 overrides: this.overrides
             };
-            const jsonString = JSON.stringify(dataPayload, null, 2);
 
-            if (this.directoryHandle) {
-                const success = await this.saveFileToFolder('Autocopia_IVA.json', jsonString);
-                if (success) {
-                    this.showToast("Autocopia actualizada en COPIASIVA.");
-                    return;
-                }
-            }
-
-            // Método alternativo por defecto
-            const blob = new Blob([jsonString], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(dataPayload, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
+            
+            // Nombre de archivo fijo sin fecha para permitir la sobreescritura en la carpeta por defecto
             link.download = `Autocopia_IVA.json`;
+            
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+            
+            this.showToast("Copia de seguridad automática descargada.");
         } catch (error) {
-            console.error("Error en autocopia de seguridad:", error);
+            console.error("No se pudo autogenerar la copia de seguridad:", error);
         }
-    }, 1500);
+    }, 1500); // 1.5 segundos de retraso al entrar
 }
-
 
 
             };
